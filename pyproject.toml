@@ -4,4 +4,14 @@ version = "0.1.0"
 description = "Add your description here"
 readme = "README.md"
 requires-python = ">=3.12"
-dependencies = []
+dependencies = [
+    "dotenv>=0.9.9",
+    "fastapi>=0.136.0",
+    "google-cloud-aiplatform>=1.148.0",
+    "google-cloud-storage>=3.10.1",
+    "groq>=1.1.2",
+    "requests>=2.33.1",
+    "uvicorn>=0.44.0",
+    "youtube-transcript-api>=1.2.4",
+    "yt-dlp>=2026.3.17",
+]

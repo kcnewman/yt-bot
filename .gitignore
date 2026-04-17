@@ -12,3 +12,6 @@ init.py
 
 # environments variable
 .env
+
+# local logs
+logs
