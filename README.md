@@ -31,8 +31,29 @@ This project serves as the Minimum Viable Product (MVP) for what will eventually
 
 ## 📂 Project Structure
 
-text twi-summary-bot/ │ ├── app/ │   ├── main.py │   ├── config.py │   ├── services/ │   │   ├── orchestrator.py │   │   ├── transcript.py │   │   ├── summarize.py │   │   ├── translate.py │   │   ├── tts.py │   │   └── telegram.py │   └── utils/ │       ├── logger.py │       ├── youtube.py │       └── prompts.py │ ├── prompts/ │   ├── summarization.txt │   └── classification.txt │ ├── .env └── README.md 
-
+twi-summary-bot/
+│
+├── app/
+│   ├── main.py
+│   ├── config.py
+│   ├── services/
+│   │   ├── orchestrator.py
+│   │   ├── transcript.py
+│   │   ├── summarize.py
+│   │   ├── translate.py
+│   │   ├── tts.py
+│   │   └── telegram.py
+│   └── utils/
+│       ├── logger.py
+│       ├── youtube.py
+│       └── prompts.py
+│
+├── prompts/
+│   ├── summarization.txt
+│   └── classification.txt
+│
+├── .env
+└── README.md
 ---
 
 ## 🚀 Installation & Local Setup
