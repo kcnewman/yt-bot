@@ -1,4 +1,4 @@
-# 🎙️ YouTube to Twi Audio Bot (Telegram MVP)
+# 🎙️ YouTube to Local Audio Bot (Telegram MVP)
 
 An AI-powered automated pipeline that consumes a YouTube video link, extracts its transcript, generates a concise summary, translates it into Twi (Akan), and delivers a native voice note directly to the user via Telegram.
 
