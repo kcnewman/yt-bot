@@ -56,3 +56,18 @@ def delete_message(chat_id: int, message_id: int | None):
         requests.post(url, json=payload)
     except Exception as e:
         logger.error(f"Failed to delete Telegram message: {e}")
+
+
+def send_audio(chat_id: int, audio_path: str):
+    """
+    Uploads and sends an audio file as a playable Voice Note in telegram
+    """
+    url = f"https://api.telegram.org/bot{TELEGRAM_BOT_TOKEN}/sendVoice"
+
+    try:
+        with open(audio_path, "rb") as audio_file:
+            files = {"voice": audio_file}
+            data = {"chat_id": chat_id}
+            requests.post(url, data=data, files=files)
+    except Exception as e:
+        logger.error(f"Failed to send Telegram voice note: {e}")

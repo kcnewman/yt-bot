@@ -1,8 +1,11 @@
 # bundles the execution together
+import os
+
 from app.services.summarize import summarize_transcript
-from app.services.telegram import delete_message, edit_text, send_text
+from app.services.telegram import delete_message, edit_text, send_audio, send_text
 from app.services.transcript import fetch_captions
 from app.services.translate import translate
+from app.services.tts import generate_audio
 from app.utils.logger import logger
 from app.utils.youtube import extract_video_id
 
@@ -52,6 +55,21 @@ def process_video(url: str, chat_id: int):
         )
         return
 
+    edit_text(chat_id, status_msg, "Recording the Twi voice note...")
+    audio = generate_audio(twi_text)
+
     delete_message(chat_id, status_msg)
-    send_text(chat_id, f"Here is your Twi summary:\n\n{twi_text}")
-    logger.info("Pipeline completed and Twi summary sent to Telegram!")
+
+    if audio:
+        send_audio(chat_id, audio)
+        # send_text(chat_id, f"Here is the written text:\n\n{twi_text}")
+
+        if os.path.exists(audio):
+            os.remove(audio)
+    else:
+        send_text(
+            chat_id,
+            f"I couldn't generate the audio, but here is your Twi summary:\n\n{twi_text}",
+        )
+
+    logger.info("Pipeline completed entirely!")
