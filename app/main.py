@@ -1,4 +1,4 @@
-# FastAPI app, webhook handlers
+# app/main.py
 from fastapi import BackgroundTasks, FastAPI, Header, HTTPException, Request
 
 from app.config import TELEGRAM_SECRET_TOKEN
@@ -24,8 +24,6 @@ async def telegram_route(
         text = body["message"].get("text", "")
 
         if is_valid_url(text):
-            send_text(chat_id, "Got your video!, working the problem...")
-
             background_task.add_task(process_video, text, chat_id)
         else:
             send_text(chat_id, "Hi! Please send me a valid YouTube link to summarize.")
