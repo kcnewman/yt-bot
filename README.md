@@ -31,29 +31,7 @@ This project serves as the Minimum Viable Product (MVP) for what will eventually
 
 ## 📂 Project Structure
 
-twi-summary-bot/
-│
-├── app/
-│   ├── main.py
-│   ├── config.py
-│   ├── services/
-│   │   ├── orchestrator.py
-│   │   ├── transcript.py
-│   │   ├── summarize.py
-│   │   ├── translate.py
-│   │   ├── tts.py
-│   │   └── telegram.py
-│   └── utils/
-│       ├── logger.py
-│       ├── youtube.py
-│       └── prompts.py
-│
-├── prompts/
-│   ├── summarization.txt
-│   └── classification.txt
-│
-├── .env
-└── README.md
+
 ---
 
 ## 🚀 Installation & Local Setup
@@ -109,7 +87,7 @@ bash curl -F "url=https://<NGROK_URL>/webhook/telegram" \      -F "secret_token=
 
 ---
 
-## ✅ Test
+## Test
 
 - Open Telegram  
 - Send a YouTube link  
@@ -117,7 +95,7 @@ bash curl -F "url=https://<NGROK_URL>/webhook/telegram" \      -F "secret_token=
 
 ---
 
-## 🔮 Roadmap
+## Roadmap
 
 - WhatsApp API migration  
 - Audio fallback (Whisper / Khaya ASR)  
