@@ -1,4 +1,6 @@
 # Khaya AI TTS + ffmpeg conversion
+import uuid
+
 import requests
 
 from app.config import KHAYA_API_KEY
@@ -26,9 +28,9 @@ def generate_audio(text: str) -> str | None:
 
     try:
         response = requests.post(url, json=payload, headers=headers)
-        response.raise_for_status
+        response.raise_for_status()
 
-        audio = "summary_audio.ogg"
+        audio = f"/tmp/audio_{uuid.uuid4().hex}.ogg"
         with open(audio, "wb") as f:
             f.write(response.content)
 

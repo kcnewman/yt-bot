@@ -1,7 +1,8 @@
 # Caption fetch + Whisper fallback
-from dotenv.main import logger
 from youtube_transcript_api import YouTubeTranscriptApi
 from youtube_transcript_api.formatters import TextFormatter
+
+from app.utils.logger import logger
 
 
 def fetch_captions(video_id: str) -> str | None:
