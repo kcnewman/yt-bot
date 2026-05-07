@@ -1,0 +1,23 @@
+Classify the video source into one content type.
+
+Allowed types:
+- tutorial
+- interview
+- news
+- explainer
+- review
+- story
+- general
+
+Rules:
+- Return only one allowed type.
+- Use tutorial for how-to, lessons, demos, setup guides, or step-by-step teaching.
+- Use interview when people ask and answer questions or share positions.
+- Use news when the source reports a recent event, announcement, policy, conflict, or public update.
+- Use explainer when the source explains a topic, idea, process, or issue.
+- Use review when the source judges a product, service, tool, movie, book, or experience.
+- Use story when the source is mainly a personal story, history, testimony, or narrative.
+- Use general when none of the above clearly fits.
+
+Source:
+{transcript}

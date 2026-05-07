@@ -75,7 +75,7 @@ def _generate_text(prompt: str) -> str | None:
     return text or None
 
 
-def summarize_transcript(transcript: str) -> str | None:
+def summarize_transcript(transcript: str, content_type: str = "general") -> str | None:
     """Generate a short, simple summary from raw transcript text."""
     if not transcript or not transcript.strip():
         return None
@@ -85,6 +85,7 @@ def summarize_transcript(transcript: str) -> str | None:
 
     base_prompt = _render_prompt(
         BASE_PROMPT_FILE,
+        content_type=content_type,
         source_words=transcript_words,
         transcript=clean_transcript,
     )

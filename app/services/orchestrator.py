@@ -1,5 +1,6 @@
 import os
 
+from app.services.classify import classify_content
 from app.services.summarize import summarize_transcript
 from app.services.telegram import delete_message, edit_text, send_audio, send_text
 from app.services.transcript import fetch_captions
@@ -9,6 +10,7 @@ from app.utils.logger import logger
 from app.utils.youtube import extract_video_id
 
 STATUS_EXTRACTING = "Got your video! Extracting transcript..."
+STATUS_CLASSIFYING = "Checking the video type..."
 STATUS_SUMMARIZING = "Reading the transcript and generating a summary..."
 STATUS_TRANSLATING = "Translating the summary into Twi..."
 STATUS_RECORDING = "Recording the Twi voice note..."
@@ -51,8 +53,11 @@ def process_video(url: str, chat_id: int) -> None:
         edit_text(chat_id, status_msg, MSG_NO_CAPTIONS)
         return
 
+    edit_text(chat_id, status_msg, STATUS_CLASSIFYING)
+    content_type = classify_content(transcript)
+
     edit_text(chat_id, status_msg, STATUS_SUMMARIZING)
-    summary = summarize_transcript(transcript)
+    summary = summarize_transcript(transcript, content_type)
     if not summary:
         edit_text(chat_id, status_msg, MSG_SUMMARY_FAILED)
         return

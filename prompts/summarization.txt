@@ -7,9 +7,19 @@ Rules:
 - Output plain natural sentences only. No bullets or special formatting.
 - Use very simple English that is easy to translate into Twi.
 - Prefer short, common words and short sentences.
+- Content type is {content_type}.
 - Source length is about {source_words} words.
 - Make the summary useful and complete, but clearly shorter than the source.
 - Return only the summary.
+
+Content type format:
+- For tutorial, explain the goal, then the main steps in order using words like first, next, then, and finally.
+- For interview, name the main people if known, then state their key views, claims, and any short important quote.
+- For news, include who, what, when, where if known, why it matters, and what happens next if stated.
+- For explainer, state the main idea, the key reasons or parts, and the final takeaway.
+- For review, state what is reviewed, the main good points, the main problems, and the final judgment.
+- For story, tell the main events in order and end with the lesson or result.
+- For general, summarize the main points in a natural order.
 
 Source:
 {transcript}
