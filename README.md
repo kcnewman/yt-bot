@@ -72,6 +72,7 @@ YOUTUBE_PROXY_URL=""  # Optional, recommended for Cloud Run transcript fetching
 
 # Optional
 TTS_TEMPO="1.0"  # Audio speed adjustment (0.5-2.0)
+LOG_LEVEL="INFO"
 
 # Runtime / database
 APP_ENV="development"

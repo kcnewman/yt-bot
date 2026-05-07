@@ -10,8 +10,6 @@ TRANSCRIPT_LANGUAGES = ["en"]
 SUMMARIZE_MODEL = "gemini-2.5-flash-lite"
 SUMMARIZE_BASE_PROMPT = "summarization.txt"
 SUMMARIZE_REWRITE_PROMPT = "summarization_rewrite.txt"
-SUMMARIZE_WORD_MIN = 300
-SUMMARIZE_WORD_MAX = 500
 
 # Classification
 CLASSIFY_MODEL = "gemini-2.5-flash-lite"

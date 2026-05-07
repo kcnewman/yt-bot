@@ -90,6 +90,7 @@ def _apply_tempo_adjustment(audio_path: str, tempo: float) -> str:
             timeout=TIMEOUT_SECONDS,
         )
         logger.info(f"Applied tempo adjustment: {tempo:.2f}")
+        Path(audio_path).unlink(missing_ok=True)
         return output_path
     except Exception as error:
         logger.warning(f"Tempo filter failed, using original audio. Error: {error}")

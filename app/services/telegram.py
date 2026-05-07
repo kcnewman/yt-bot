@@ -166,8 +166,11 @@ def send_audio(chat_id: int, audio_path: str) -> bool:
             logger.info(f"Sent audio to chat {chat_id}")
             return True
 
-    except RequestException as error:
+    except OSError as error:
         logger.error(f"Failed to read audio file {audio_path}: {error}")
+        return False
+    except RequestException as error:
+        logger.error(f"Failed to send audio to chat {chat_id}: {error}")
         return False
     except Exception as error:
         logger.error(f"Unexpected error sending audio: {error}", exc_info=True)

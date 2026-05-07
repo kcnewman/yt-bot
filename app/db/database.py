@@ -30,7 +30,11 @@ def _ensure_sqlite_parent(database_url: str) -> None:
 def create_database_engine(database_url: str = DATABASE_URL) -> Engine:
     """Create a SQLAlchemy engine for the given database URL."""
     _ensure_sqlite_parent(database_url)
-    return create_engine(database_url, connect_args=_connect_args(database_url))
+    return create_engine(
+        database_url,
+        connect_args=_connect_args(database_url),
+        pool_pre_ping=True,
+    )
 
 
 engine = create_database_engine()

@@ -92,18 +92,14 @@ yt-bot/
 │       ├── __init__.py
 │       ├── logger.py          # Logging setup
 │       ├── youtube.py         # YouTube URL parsing
-│       ├── prompt.py          # Prompt template loading
-│       └── storage.py         # GCS utilities (future)
+│       └── prompt.py          # Prompt template loading
 │
 ├── prompts/                   # Prompt templates
 │   ├── classification.txt
 │   ├── summarization.txt
 │   └── summarization_rewrite.txt
 │
-├── logs/                      # Application logs
-│
-├── pyproject.toml             # Project configuration
-├── requirements.txt           # Dependencies
+├── pyproject.toml             # Project configuration and dependencies
 └── .env                       # Environment variables (create this)
 ```
 
@@ -127,7 +123,7 @@ yt-bot/
 ## Troubleshooting
 
 ### Services failing?
-1. Check `logs/bot.log` for detailed error messages
+1. Check application stdout/stderr logs for detailed error messages
 2. Look at the specific exception type (raised by service)
 3. Trace it back in ARCHITECTURE.md
 4. Check if configuration is missing (.env file)

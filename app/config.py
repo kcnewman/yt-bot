@@ -1,17 +1,24 @@
-"""Application configuration - environment variables and settings."""
+"""Application configuration."""
 
 import os
 from pathlib import Path
 
 from dotenv import load_dotenv
 
-# Load environment variables
-load_dotenv(override=True)
+# Local development convenience. In production, real environment variables win.
+load_dotenv(override=False)
+
+
+def _get_env(key: str, default: str | None = None) -> str | None:
+    value = os.getenv(key)
+    if value is None or not value.strip():
+        return default
+    return value.strip()
 
 
 def _get_required_env(key: str) -> str | None:
-    """Get an environment variable, log a warning if missing."""
-    value = os.getenv(key)
+    """Return an environment variable and warn when it is missing."""
+    value = _get_env(key)
     if not value:
         from app.utils.logger import logger
 
@@ -20,16 +27,16 @@ def _get_required_env(key: str) -> str | None:
 
 
 def _get_optional_env(key: str, default: str = "") -> str:
-    """Get an optional environment variable with a default."""
-    return os.getenv(key, default)
+    """Return an optional environment variable with a default."""
+    return _get_env(key, default) or ""
 
 
 def _get_bool_env(key: str, default: bool = False) -> bool:
-    """Get a boolean environment variable."""
-    value = os.getenv(key)
+    """Return a boolean environment variable."""
+    value = _get_env(key)
     if value is None:
         return default
-    return value.strip().lower() in {"1", "true", "yes", "on"}
+    return value.lower() in {"1", "true", "yes", "on"}
 
 
 # Runtime Configuration
@@ -63,9 +70,32 @@ BASE_DIR = Path(__file__).resolve().parents[1]
 PROMPTS_DIR = BASE_DIR / "prompts"
 
 # Database Configuration
-_database_url = os.getenv("DATABASE_URL")
-if IS_PRODUCTION and not _database_url:
-    raise RuntimeError("DATABASE_URL must be set when APP_ENV=production.")
-
+_database_url = _get_env("DATABASE_URL")
 DATABASE_URL = _database_url or f"sqlite:///{BASE_DIR / 'data' / 'yt_bot.db'}"
 AUTO_INIT_DB = _get_bool_env("AUTO_INIT_DB", default=not IS_PRODUCTION)
+
+
+def _validate_production_config() -> None:
+    """Fail fast when production starts without required secrets or services."""
+    if not IS_PRODUCTION:
+        return
+
+    missing = [
+        key
+        for key, value in {
+            "TELEGRAM_BOT_TOKEN": TELEGRAM_BOT_TOKEN,
+            "TELEGRAM_SECRET_TOKEN": TELEGRAM_SECRET_TOKEN,
+            "GCP_PROJECT_ID": GCP_PROJECT_ID,
+            "KHAYA_API_KEY": KHAYA_API_KEY,
+            "DATABASE_URL": _database_url,
+        }.items()
+        if not value
+    ]
+    if missing:
+        raise RuntimeError(
+            "Missing required production environment variables: "
+            + ", ".join(sorted(missing))
+        )
+
+
+_validate_production_config()

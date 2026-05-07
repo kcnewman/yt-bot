@@ -7,18 +7,6 @@ class BotException(Exception):
     pass
 
 
-class ConfigError(BotException):
-    """Raised when configuration is missing or invalid."""
-
-    pass
-
-
-class ExternalAPIError(BotException):
-    """Raised when external API calls fail."""
-
-    pass
-
-
 class TranscriptError(BotException):
     """Raised when transcript extraction fails."""
 
@@ -39,12 +27,6 @@ class TranslationError(BotException):
 
 class TTSError(BotException):
     """Raised when text-to-speech generation fails."""
-
-    pass
-
-
-class TelegramError(BotException):
-    """Raised when Telegram API operations fail."""
 
     pass
 

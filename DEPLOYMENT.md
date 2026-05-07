@@ -25,10 +25,12 @@ GCP_REGION=us-central1
 KHAYA_API_KEY=...
 YOUTUBE_PROXY_URL=http://USER:PASSWORD@HOST:PORT
 TTS_TEMPO=1.0
+LOG_LEVEL=INFO
 ```
 
 Use Secret Manager for tokens, API keys, and database credentials.
 Use a rotating residential proxy for `YOUTUBE_PROXY_URL`; datacenter proxies are commonly blocked by YouTube.
+Logs are written to stdout/stderr for Cloud Run ingestion.
 
 The Cloud Run service account needs at least:
 

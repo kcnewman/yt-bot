@@ -38,8 +38,7 @@ app/
     ├── __init__.py
     ├── logger.py            # Structured logging setup
     ├── youtube.py           # YouTube URL parsing
-    ├── prompt.py            # Prompt template loading
-    └── storage.py           # GCS utilities (future use)
+    └── prompt.py            # Prompt template loading
 ```
 
 ## Key Components
@@ -65,7 +64,6 @@ Custom exception hierarchy for type-safe error handling:
 - `SummarizationError` - Summarization failures
 - `TranslationError` - Translation failures
 - `TTSError` - Audio generation failures
-- `TelegramError` - Telegram API failures
 - `ValidationError` - Input validation failures
 
 **Usage:**

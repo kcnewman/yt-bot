@@ -93,13 +93,12 @@ class TestValidateChatId:
 
     def test_zero_chat_id_raises_error(self):
         """Should reject zero chat ID."""
-        with pytest.raises(ValidationError, match="Chat ID must be positive"):
+        with pytest.raises(ValidationError, match="Chat ID cannot be zero"):
             validate_chat_id(0)
 
-    def test_negative_chat_id_raises_error(self):
-        """Should reject negative chat ID."""
-        with pytest.raises(ValidationError, match="Chat ID must be positive"):
-            validate_chat_id(-123)
+    def test_negative_chat_id_is_valid_for_groups(self):
+        """Should accept negative Telegram group chat IDs."""
+        assert validate_chat_id(-123) == -123
 
     def test_non_integer_raises_error(self):
         """Should raise ValidationError for non-integer input."""
@@ -110,3 +109,8 @@ class TestValidateChatId:
         """Should raise ValidationError for float input."""
         with pytest.raises(ValidationError, match="Chat ID must be an integer"):
             validate_chat_id(123.45)
+
+    def test_bool_raises_error(self):
+        """Should reject booleans even though bool is an int subclass."""
+        with pytest.raises(ValidationError, match="Chat ID must be an integer"):
+            validate_chat_id(True)

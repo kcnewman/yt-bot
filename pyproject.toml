@@ -1,16 +1,13 @@
 [project]
 name = "yt-bot"
 version = "0.1.0"
-description = "Add your description here"
+description = "Telegram bot that summarizes YouTube videos into Twi voice notes"
 readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [
-    "dotenv>=0.9.9",
     "fastapi>=0.136.0",
-    "google-cloud-aiplatform>=1.148.0",
-    "google-cloud-storage>=3.10.1",
     "google-genai>=1.73.1",
-    "groq>=1.1.2",
+    "python-dotenv>=1.2.1",
     "psycopg[binary]>=3.2.0",
     "requests>=2.33.1",
     "sqlalchemy>=2.0.0",

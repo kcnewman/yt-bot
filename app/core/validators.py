@@ -1,7 +1,6 @@
 """Input validators for the application."""
 
 from app.core.exceptions import ValidationError
-from app.utils.logger import logger
 from app.utils.youtube import extract_video_id
 
 
@@ -66,10 +65,10 @@ def validate_chat_id(chat_id: int) -> int:
     Raises:
         ValidationError: If validation fails.
     """
-    if not isinstance(chat_id, int):
+    if not isinstance(chat_id, int) or isinstance(chat_id, bool):
         raise ValidationError("Chat ID must be an integer.")
 
-    if chat_id <= 0:
-        raise ValidationError("Chat ID must be positive.")
+    if chat_id == 0:
+        raise ValidationError("Chat ID cannot be zero.")
 
     return chat_id

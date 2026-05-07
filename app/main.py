@@ -6,6 +6,7 @@ from fastapi import BackgroundTasks, FastAPI, Header, HTTPException, Request
 from sqlalchemy import text
 
 from app.config import AUTO_INIT_DB, TELEGRAM_SECRET_TOKEN
+from app.core.exceptions import ValidationError
 from app.core.validators import validate_chat_id, validate_youtube_url
 from app.db import SessionLocal, init_db
 from app.services.orchestrator import process_video
@@ -89,7 +90,7 @@ async def telegram_webhook(
                 video_id = validate_youtube_url(text)
                 logger.info(f"Valid YouTube URL detected: {video_id}")
                 background_tasks.add_task(process_video, text, chat_id)
-            except Exception:
+            except ValidationError:
                 # Not a valid YouTube URL, send help message
                 msg = (
                     "Hi! 👋 Please send me a valid YouTube link to summarize "
