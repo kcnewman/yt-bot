@@ -48,7 +48,7 @@ def readyz():
 async def telegram_webhook(
     request: Request,
     background_tasks: BackgroundTasks,
-    x_telegram_bot_api_secret_token: str = Header(None),
+    x_telegram_bot_api_secret_token: str | None = Header(None),
 ):
     """
     Webhook endpoint for Telegram bot updates.

@@ -12,7 +12,6 @@ from app.core.constants import (
     CLASSIFY_PROMPT,
     CLASSIFY_SAMPLE_CHARS,
 )
-from app.core.exceptions import SummarizationError
 from app.utils.logger import logger
 from app.utils.prompt import load_prompt
 
@@ -30,21 +29,9 @@ client: genai.Client | None = create_genai_client()
 
 
 def _render_classification_prompt(transcript: str) -> str:
-    """
-    Load and render the classification prompt template.
-
-    Args:
-        transcript: The transcript text to classify.
-
-    Returns:
-        The rendered prompt.
-
-    Raises:
-        SummarizationError: If prompt loading fails.
-    """
     template = load_prompt(CLASSIFY_PROMPT).strip()
     if not template:
-        raise SummarizationError(
+        raise Exception(
             f"Classification prompt template is missing: {CLASSIFY_PROMPT}"
         )
 

@@ -1,6 +1,5 @@
 """Main orchestrator for the video processing pipeline."""
 
-import os
 import tempfile
 from pathlib import Path
 
@@ -37,19 +36,12 @@ db_repository = DatabaseRepository()
 
 
 def _cleanup_file(file_path: str | None) -> None:
-    """
-    Delete a local file if it exists.
-
-    Args:
-        file_path: Path to the file to delete.
-    """
     if not file_path:
         return
 
     try:
-        if os.path.exists(file_path):
-            os.remove(file_path)
-            logger.debug(f"Cleaned up temporary file: {file_path}")
+        Path(file_path).unlink(missing_ok=True)
+        logger.debug(f"Cleaned up temporary file: {file_path}")
     except OSError as error:
         logger.warning(f"Failed to delete temporary file {file_path}: {error}")
 

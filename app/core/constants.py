@@ -47,7 +47,7 @@ STATUS_RECORDING = "Recording the Twi voice note..."
 
 # Error Messages
 MSG_INVALID_URL = "I couldn't extract a valid Video ID from the link."
-MSG_NO_CAPTIONS = "Sorry, I couldn't find English captions for this video. (Audio fallback coming soon!)"
+MSG_NO_CAPTIONS = "Sorry, I couldn't find English captions for this video."
 MSG_SUMMARY_FAILED = "Oops, my AI brain failed to generate a summary. Please try again."
 MSG_TRANSLATION_FAILED_PREFIX = (
     "Sorry, the translation failed. Here is the English version for now:\n\n"

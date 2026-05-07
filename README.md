@@ -55,7 +55,6 @@ TELEGRAM_SECRET_TOKEN="your_secret_token"
 GCP_PROJECT_ID="your-project-id"
 GCP_REGION="us-central1"
 KHAYA_API_KEY="your_khaya_api_key"
-YOUTUBE_PROXY_URL=""  # Optional, recommended for Cloud Run
 TTS_TEMPO="1.0"
 LOG_LEVEL="INFO"
 APP_ENV="development"

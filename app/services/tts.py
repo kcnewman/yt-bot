@@ -136,8 +136,6 @@ def _request_audio_from_api(text: str) -> bytes:
             error_msg += f" (Server: {error.response.text})"
         logger.error(error_msg)
         raise TTSError(error_msg)
-    except TTSError:
-        raise
     except Exception as error:
         logger.error(f"Unexpected error calling TTS API: {error}", exc_info=True)
         raise TTSError(f"TTS API call failed: {error}")
@@ -173,8 +171,6 @@ def generate_audio(text: str) -> str:
         logger.info(f"Generated audio file: {adjusted_path}")
         return adjusted_path
 
-    except TTSError:
-        raise
     except Exception as error:
         logger.error(f"Unexpected error during TTS generation: {error}", exc_info=True)
         raise TTSError(f"Audio generation failed: {error}")
