@@ -1,103 +1,136 @@
-# 🎙️ YouTube to Local Audio Bot (Telegram MVP)
+# YouTube to Twi Audio Bot
 
-An AI-powered automated pipeline that consumes a YouTube video link, extracts its transcript, generates a concise summary, translates it into Twi (Akan), and delivers a native voice note directly to the user via Telegram.
+An AI-powered pipeline that consumes a YouTube video link, extracts its transcript, generates a concise summary, translates it into Twi (Akan), and delivers a native voice note directly to the user via Telegram.
 
-This project serves as the Minimum Viable Product (MVP) for what will eventually become a WhatsApp-based service. Currently, it uses Telegram as the primary interface for rapid iteration and testing.
-
----
-
-## ✨ Features
-
-- Seamless Chat Interface: Users paste a YouTube link into the chat  
-- Smart Orchestration: FastAPI uses background tasks to prevent webhook timeouts  
-- Live Status Updates: Single message updates (e.g., ⏳ Extracting transcript... → 🎤 Recording voice note...)  
-- AI Summarization: Google Gemini 2.5 Flash Lite via Vertex AI generates 300–500 word summaries  
-- Twi Translation & TTS: Khaya AI provides translation and natural voice synthesis  
-- Optimized Audio: Native .ogg output for Telegram voice notes (no ffmpeg required)
+**Status**: MVP (Minimum Viable Product)
 
 ---
 
-## 🏗️ Architecture & Pipeline Flow
+## Features
 
-1. Input: User sends a YouTube URL  
-2. Webhook Ack: FastAPI returns 200 OK, offloads to background task  
-3. Transcript Extraction: Pull captions from YouTube APIs  
-4. Summarization: Gemini generates conversational summary  
-5. Translation: English → Twi via Khaya AI  
-6. TTS: Twi text → .ogg audio  
-7. Delivery: Send voice note + fallback text  
-
----
-
-## 📂 Project Structure
+- **Seamless Chat Interface**: Users paste a YouTube link into Telegram
+- **Live Status Updates**: User is updated on status of request
+- **AI Summarization**: Google Gemini 2.5 Flash Lite generates summaries
+- **Twi Translation & TTS**: Khaya AI provides translation and natural voice synthesis
+- **Graceful Failures**: User receives text fallback if audio generation fails
 
 
 ---
 
-## 🚀 Installation & Local Setup
+## Project Structure
+
+```
+app/
+├── core/              # Exceptions, validators, constants, clients
+├── services/          # Business logic (orchestrator, transcript, summarize, etc.)
+├── utils/             # Helpers (logger, youtube, prompt)
+├── config.py          # Environment configuration
+└── main.py            # FastAPI entry point
+```
+
+---
+
+## Installation & Setup
 
 ### 1. Prerequisites
-- Python 3.10+
+- Python 3.12+
 - uv (Python package manager)
-- ngrok
+- ngrok (for local Telegram webhook testing)
 
-#### API Access:
-- Google Cloud (Vertex AI enabled)
-- Khaya AI API Key
-- Telegram Bot Token
+#### API Requirements:
+- **Google Cloud**: Vertex AI enabled, credentials configured
+- **Khaya AI**: API key for translation and TTS
+- **Telegram**: Bot token and secret from [@BotFather](https://t.me/botfather)
 
----
+### 2. Clone & Install
 
-### 2. Clone Repository
-bash git clone <repository-url> cd twi-summary-bot 
+```bash
+git clone https://github.com/kcnewman/yt-bot.git
+cd yt-bot
+uv sync
+source .venv/bin/activate
+```
 
----
+### 3. Environment Variables
 
-### 3. Install Dependencies
-bash uv venv source .venv/bin/activate uv add fastapi uvicorn requests google-genai python-dotenv 
+Create a `.env` file:
 
----
+```env
+# Telegram
+TELEGRAM_BOT_TOKEN="your_bot_token"
+TELEGRAM_SECRET_TOKEN="your_secret_token"
 
-### 4. Environment Variables
+# Google Cloud
+GCP_PROJECT_ID="your-project-id"
+GCP_REGION="us-central1"
 
-Create .env:
+# External APIs
+KHAYA_API_KEY="your_khaya_api_key"
 
-env TELEGRAM_BOT_TOKEN="your_token" TELEGRAM_SECRET_TOKEN="your_secret"  GCP_PROJECT_ID="your_project" GCP_REGION="us-central1"  KHAYA_API_KEY="your_key" 
+# Optional
+TTS_TEMPO="1.0"  # Audio speed adjustment (0.5-2.0)
+```
 
----
+### 4. Google Cloud Authentication
 
-### 5. Google Cloud Auth
-bash gcloud auth application-default login 
-
----
-
-## ▶️ Running the Bot
-
-### Terminal 1
-bash uvicorn app.main:app --reload --port 8000 
-
-### Terminal 2
-bash ngrok http 8000 
-
----
-
-## 🔗 Configure Telegram Webhook
-
-bash curl -F "url=https://<NGROK_URL>/webhook/telegram" \      -F "secret_token=<SECRET>" \      https://api.telegram.org/bot<TELEGRAM_TOKEN>/setWebhook 
+```bash
+gcloud auth application-default login
+```
 
 ---
 
-## Test
+## Running Locally
 
-- Open Telegram  
-- Send a YouTube link  
-- Observe pipeline execution  
+### Terminal 1: Start FastAPI server
+
+```bash
+uvicorn app.main:app --reload --port 8000
+```
+
+### Terminal 2: Expose with ngrok
+
+```bash
+ngrok http 8000
+```
+
+### Terminal 3: Configure Telegram webhook
+
+```bash
+curl -X POST \
+  -H "Content-Type: application/json" \
+  -d '{"url":"https://<NGROK_URL>/webhook/telegram","secret_token":"<SECRET>"}' \
+  "https://api.telegram.org/bot<TOKEN>/setWebhook"
+```
 
 ---
 
-## Roadmap
+## Pipeline Flow
 
-- WhatsApp API migration  
-- Audio fallback (Whisper / Khaya ASR)  
-- Long video chunking  
-- Docker + Cloud Run deployment
+```
+User sends YouTube URL
+         ↓
+    [Validate URL]
+         ↓
+    [Extract Transcript]
+         ↓
+    [Classify Content]
+         ↓
+    [Generate Summary]
+         ↓
+    [Translate to Twi]
+         ↓
+    [Generate Audio]
+         ↓
+    [Send Voice Note]
+```
+
+> Check logs if any component fails for traceback
+
+---
+
+## Documentation
+
+- [ARCHITECTURE.md](ARCHITECTURE.md) - Detailed structure and patterns
+- [Telegram Bot API](https://core.telegram.org/bots/api)
+- [Google Vertex AI](https://cloud.google.com/vertex-ai/docs)
+- [Khaya AI](https://www.ghananlp.org/)

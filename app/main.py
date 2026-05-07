@@ -1,31 +1,71 @@
-# app/main.py
+"""FastAPI application entry point."""
+
 from fastapi import BackgroundTasks, FastAPI, Header, HTTPException, Request
 
 from app.config import TELEGRAM_SECRET_TOKEN
+from app.core.validators import validate_chat_id, validate_youtube_url
 from app.services.orchestrator import process_video
 from app.services.telegram import send_text
-from app.utils.youtube import is_valid_url
+from app.utils.logger import logger
 
-app = FastAPI()
+app = FastAPI(title="YouTube to Twi Bot", version="0.1.0")
 
 
 @app.post("/webhook/telegram")
-async def telegram_route(
+async def telegram_webhook(
     request: Request,
-    background_task: BackgroundTasks,
+    background_tasks: BackgroundTasks,
     x_telegram_bot_api_secret_token: str = Header(None),
 ):
+    """
+    Webhook endpoint for Telegram bot updates.
+
+    Args:
+        request: The HTTP request from Telegram.
+        background_tasks: FastAPI background tasks manager.
+        x_telegram_bot_api_secret_token: Secret token from Telegram header.
+
+    Returns:
+        JSON response confirming receipt.
+
+    Raises:
+        HTTPException: If authentication fails.
+    """
+    # Verify secret token
     if x_telegram_bot_api_secret_token != TELEGRAM_SECRET_TOKEN:
-        raise HTTPException(status_code=401)
+        logger.warning("Unauthorized webhook access attempt.")
+        raise HTTPException(status_code=401, detail="Unauthorized")
 
-    body = await request.json()
+    try:
+        body = await request.json()
+    except Exception as error:
+        logger.error(f"Failed to parse webhook body: {error}")
+        raise HTTPException(status_code=400, detail="Invalid JSON")
+
+    # Process message
     if "message" in body:
-        chat_id = body["message"]["chat"]["id"]
-        text = body["message"].get("text", "")
+        try:
+            chat_id = validate_chat_id(body["message"]["chat"]["id"])
+            text = body["message"].get("text", "").strip()
 
-        if is_valid_url(text):
-            background_task.add_task(process_video, text, chat_id)
-        else:
-            send_text(chat_id, "Hi! Please send me a valid YouTube link to summarize.")
+            if not text:
+                logger.debug(f"Ignoring empty message from chat {chat_id}")
+                return {"status": "ok"}
+
+            # Check if URL and queue for processing
+            try:
+                video_id = validate_youtube_url(text)
+                logger.info(f"Valid YouTube URL detected: {video_id}")
+                background_tasks.add_task(process_video, text, chat_id)
+            except Exception:
+                # Not a valid YouTube URL, send help message
+                msg = (
+                    "Hi! 👋 Please send me a valid YouTube link to summarize "
+                    "and convert to audio."
+                )
+                send_text(chat_id, msg)
+
+        except Exception as error:
+            logger.error(f"Error processing webhook: {error}", exc_info=True)
 
     return {"status": "ok"}

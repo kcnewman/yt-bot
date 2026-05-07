@@ -1,17 +1,50 @@
 # Python-generated files
 __pycache__/
 *.py[oc]
+*.so
 build/
 dist/
 wheels/
 *.egg-info
-init.py
+*.egg
 
 # Virtual environments
 .venv
+venv/
+env/
 
-# environments variable
+# Environment variables
 .env
+.env.local
+.env.*.local
 
-# local logs
-logs
+# IDE & Editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
+*.sublime-project
+*.sublime-workspace
+
+# Testing & Coverage
+.pytest_cache/
+.coverage
+.coverage.*
+htmlcov/
+.tox/
+pytest.ini
+
+# Type checking
+.mypy_cache/
+.dmypy.json
+dmypy.json
+
+# Local logs
+logs/
+*.log
+
+# Build artifacts
+.build/

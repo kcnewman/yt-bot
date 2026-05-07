@@ -1,15 +1,20 @@
+"""Content classification service."""
+
 from typing import Literal, cast
 
 from google import genai
 
-from app.config import GCP_PROJECT_ID, GCP_REGION
+from app.core.clients import create_genai_client
+from app.core.constants import (
+    CLASSIFY_ALLOWED,
+    CLASSIFY_DEFAULT,
+    CLASSIFY_MODEL,
+    CLASSIFY_PROMPT,
+    CLASSIFY_SAMPLE_CHARS,
+)
+from app.core.exceptions import SummarizationError
 from app.utils.logger import logger
 from app.utils.prompt import load_prompt
-
-MODEL_NAME = "gemini-2.5-flash-lite"
-PROMPT_FILE = "classification.txt"
-DEFAULT_CONTENT_TYPE = "general"
-CLASSIFICATION_SAMPLE_CHARS = 8000
 
 ContentType = Literal[
     "tutorial",
@@ -20,74 +25,80 @@ ContentType = Literal[
     "story",
     "general",
 ]
-ALLOWED_CONTENT_TYPES: set[ContentType] = {
-    "tutorial",
-    "interview",
-    "news",
-    "explainer",
-    "review",
-    "story",
-    "general",
-}
+
+client: genai.Client | None = create_genai_client()
 
 
-def _create_client() -> genai.Client | None:
-    """Create and return the GenAI client."""
-    try:
-        return genai.Client(
-            vertexai=True,
-            project=GCP_PROJECT_ID,
-            location=GCP_REGION,
-        )
-    except Exception as error:
-        logger.error(f"Failed to initialize classifier client: {error}", exc_info=True)
-        return None
+def _render_classification_prompt(transcript: str) -> str:
+    """
+    Load and render the classification prompt template.
 
+    Args:
+        transcript: The transcript text to classify.
 
-client: genai.Client | None = _create_client()
+    Returns:
+        The rendered prompt.
 
-
-def _render_prompt(transcript: str) -> str | None:
-    """Load and render the classification prompt."""
-    template = load_prompt(PROMPT_FILE).strip()
+    Raises:
+        SummarizationError: If prompt loading fails.
+    """
+    template = load_prompt(CLASSIFY_PROMPT).strip()
     if not template:
-        logger.error(f"Prompt template is empty or missing: {PROMPT_FILE}")
-        return None
+        raise SummarizationError(
+            f"Classification prompt template is missing: {CLASSIFY_PROMPT}"
+        )
 
-    return template.format(transcript=transcript[:CLASSIFICATION_SAMPLE_CHARS])
+    return template.format(transcript=transcript[:CLASSIFY_SAMPLE_CHARS])
 
 
-def _parse_content_type(value: str | None) -> ContentType:
-    """Return a valid content type."""
+def _validate_content_type(value: str | None) -> ContentType:
+    """
+    Parse and validate a content type value.
+
+    Args:
+        value: The content type string to validate.
+
+    Returns:
+        A valid content type.
+    """
     if not value:
-        return DEFAULT_CONTENT_TYPE
+        return CLASSIFY_DEFAULT  # type: ignore
 
     content_type = value.strip().lower()
-    if content_type in ALLOWED_CONTENT_TYPES:
+    if content_type in CLASSIFY_ALLOWED:
         return cast(ContentType, content_type)
 
-    logger.warning(f"Unknown content type returned: {value}")
-    return DEFAULT_CONTENT_TYPE
+    logger.warning(
+        f"Unknown content type returned: {value}, using default: {CLASSIFY_DEFAULT}"
+    )
+    return CLASSIFY_DEFAULT  # type: ignore
 
 
 def classify_content(transcript: str) -> ContentType:
-    """Classify transcript content type."""
+    """
+    Classify the type of content in a transcript.
+
+    Args:
+        transcript: The transcript text to classify.
+
+    Returns:
+        The content type classification.
+    """
     if not transcript or not transcript.strip():
-        return DEFAULT_CONTENT_TYPE
+        logger.info(f"Empty transcript, using default content type: {CLASSIFY_DEFAULT}")
+        return CLASSIFY_DEFAULT  # type: ignore
 
     if client is None:
-        logger.error("Classifier client is not available.")
-        return DEFAULT_CONTENT_TYPE
-
-    prompt = _render_prompt(transcript.strip())
-    if prompt is None:
-        return DEFAULT_CONTENT_TYPE
+        logger.error("GenAI client is unavailable, using default content type.")
+        return CLASSIFY_DEFAULT  # type: ignore
 
     try:
-        response = client.models.generate_content(model=MODEL_NAME, contents=prompt)
-        content_type = _parse_content_type(response.text)
+        prompt = _render_classification_prompt(transcript.strip())
+        response = client.models.generate_content(model=CLASSIFY_MODEL, contents=prompt)
+        content_type = _validate_content_type(response.text)
         logger.info(f"Classified content type: {content_type}")
         return content_type
+
     except Exception as error:
         logger.error(f"Content classification failed: {error}", exc_info=True)
-        return DEFAULT_CONTENT_TYPE
+        return CLASSIFY_DEFAULT  # type: ignore

@@ -1,34 +1,48 @@
+"""Transcript extraction service."""
+
 from youtube_transcript_api import YouTubeTranscriptApi
 from youtube_transcript_api.formatters import TextFormatter
 
+from app.core.constants import TRANSCRIPT_LANGUAGES
+from app.core.exceptions import TranscriptError
 from app.utils.logger import logger
 
-TRANSCRIPT_LANGUAGES = ["en"]
 
+def fetch_captions(video_id: str) -> str:
+    """
+    Fetch English captions for a YouTube video.
 
-def _format_transcript_text(video_id: str, api: YouTubeTranscriptApi) -> str | None:
-    """Fetch and format transcript text for a video."""
-    transcript = api.list(video_id).find_transcript(TRANSCRIPT_LANGUAGES)
-    transcript_data = transcript.fetch()
-    transcript_text = TextFormatter().format_transcript(transcript_data).strip()
-    return transcript_text or None
+    Args:
+        video_id: The YouTube video ID.
 
+    Returns:
+        The transcript text.
 
-def fetch_captions(video_id: str) -> str | None:
-    """Fetch English captions for a video."""
+    Raises:
+        TranscriptError: If transcript extraction fails.
+    """
     if not video_id or not video_id.strip():
-        return None
+        raise TranscriptError("Video ID cannot be empty.")
 
+    clean_video_id = video_id.strip()
     api = YouTubeTranscriptApi()
 
     try:
-        transcript_text = _format_transcript_text(video_id.strip(), api)
-        if not transcript_text:
-            logger.warning(f"Transcript is empty for video: {video_id}")
-            return None
+        transcript_data = (
+            api.list(clean_video_id).find_transcript(TRANSCRIPT_LANGUAGES).fetch()
+        )
+        transcript_text = TextFormatter().format_transcript(transcript_data).strip()
 
-        logger.info(f"Extracted {len(transcript_text)} characters of text.")
+        if not transcript_text:
+            raise TranscriptError(f"Transcript is empty for video: {clean_video_id}")
+
+        logger.info(
+            f"Successfully extracted {len(transcript_text)} characters of transcript."
+        )
         return transcript_text
+
+    except TranscriptError:
+        raise
     except Exception as error:
-        logger.warning(f"Could not fetch text captions for {video_id}: {error}")
-        return None
+        logger.error(f"Failed to fetch transcript for {clean_video_id}: {error}")
+        raise TranscriptError(f"Could not extract transcript: {error}")
