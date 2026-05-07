@@ -24,6 +24,18 @@ def _get_optional_env(key: str, default: str = "") -> str:
     return os.getenv(key, default)
 
 
+def _get_bool_env(key: str, default: bool = False) -> bool:
+    """Get a boolean environment variable."""
+    value = os.getenv(key)
+    if value is None:
+        return default
+    return value.strip().lower() in {"1", "true", "yes", "on"}
+
+
+# Runtime Configuration
+APP_ENV = _get_optional_env("APP_ENV", "development")
+IS_PRODUCTION = APP_ENV.lower() == "production"
+
 # Telegram Configuration
 TELEGRAM_BOT_TOKEN = _get_required_env("TELEGRAM_BOT_TOKEN")
 TELEGRAM_SECRET_TOKEN = _get_required_env("TELEGRAM_SECRET_TOKEN")
@@ -34,6 +46,7 @@ GCP_REGION = _get_optional_env("GCP_REGION", "us-central1")
 
 # External API Configuration
 KHAYA_API_KEY = _get_required_env("KHAYA_API_KEY")
+YOUTUBE_PROXY_URL = _get_optional_env("YOUTUBE_PROXY_URL")
 
 # TTS Tempo Configuration
 _tts_tempo_str = _get_optional_env("TTS_TEMPO", "1.0")
@@ -50,7 +63,9 @@ BASE_DIR = Path(__file__).resolve().parents[1]
 PROMPTS_DIR = BASE_DIR / "prompts"
 
 # Database Configuration
-DATABASE_URL = _get_optional_env(
-    "DATABASE_URL",
-    f"sqlite:///{BASE_DIR / 'data' / 'yt_bot.db'}",
-)
+_database_url = os.getenv("DATABASE_URL")
+if IS_PRODUCTION and not _database_url:
+    raise RuntimeError("DATABASE_URL must be set when APP_ENV=production.")
+
+DATABASE_URL = _database_url or f"sqlite:///{BASE_DIR / 'data' / 'yt_bot.db'}"
+AUTO_INIT_DB = _get_bool_env("AUTO_INIT_DB", default=not IS_PRODUCTION)

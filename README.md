@@ -12,6 +12,8 @@ An AI-powered pipeline that consumes a YouTube video link, extracts its transcri
 - **Live Status Updates**: User is updated on status of request
 - **AI Summarization**: Google Gemini 2.5 Flash Lite generates summaries
 - **Twi Translation & TTS**: Khaya AI provides translation and natural voice synthesis
+- **Video Cache**: Processed videos are cached to reduce repeated external API calls
+- **Request Logging**: Processing attempts are stored for debugging
 - **Graceful Failures**: User receives text fallback if audio generation fails
 
 
@@ -66,9 +68,15 @@ GCP_REGION="us-central1"
 
 # External APIs
 KHAYA_API_KEY="your_khaya_api_key"
+YOUTUBE_PROXY_URL=""  # Optional, recommended for Cloud Run transcript fetching
 
 # Optional
 TTS_TEMPO="1.0"  # Audio speed adjustment (0.5-2.0)
+
+# Runtime / database
+APP_ENV="development"
+AUTO_INIT_DB="true"
+DATABASE_URL=""  # Defaults to local SQLite when unset
 ```
 
 ### 4. Google Cloud Authentication
@@ -84,7 +92,7 @@ gcloud auth application-default login
 ### Terminal 1: Start FastAPI server
 
 ```bash
-uvicorn app.main:app --reload --port 8000
+uv run uvicorn app.main:app --reload --port 8000
 ```
 
 ### Terminal 2: Expose with ngrok
@@ -125,6 +133,18 @@ User sends YouTube URL
 ```
 
 > Check logs if any component fails for traceback
+
+---
+
+## Deployment
+
+See [DEPLOYMENT.md](DEPLOYMENT.md) for Cloud Run deployment notes.
+
+## Tests
+
+```bash
+uv run --extra dev pytest -q
+```
 
 ---
 

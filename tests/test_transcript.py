@@ -5,7 +5,7 @@ from unittest.mock import Mock, patch
 import pytest
 
 from app.core.exceptions import TranscriptError
-from app.services.transcript import fetch_captions
+from app.services.transcript import _create_transcript_api, fetch_captions
 
 
 class TestFetchCaptions:
@@ -34,6 +34,34 @@ class TestFetchCaptions:
 
             assert result == "Hello world"
             mock_api.list.assert_called_once_with("dQw4w9WgXcQ")
+
+    @patch("app.services.transcript.YOUTUBE_PROXY_URL", "")
+    @patch("app.services.transcript.YouTubeTranscriptApi")
+    def test_create_transcript_api_without_proxy(self, mock_api_class):
+        """Should create default API client when proxy is not configured."""
+        _create_transcript_api()
+
+        mock_api_class.assert_called_once_with()
+
+    @patch("app.services.transcript.YOUTUBE_PROXY_URL", "http://user:pass@proxy:8080")
+    @patch("app.services.transcript.GenericProxyConfig")
+    @patch("app.services.transcript.YouTubeTranscriptApi")
+    def test_create_transcript_api_with_proxy(
+        self,
+        mock_api_class,
+        mock_proxy_config,
+    ):
+        """Should pass proxy config to API client when configured."""
+        mock_proxy = Mock()
+        mock_proxy_config.return_value = mock_proxy
+
+        _create_transcript_api()
+
+        mock_proxy_config.assert_called_once_with(
+            http_url="http://user:pass@proxy:8080",
+            https_url="http://user:pass@proxy:8080",
+        )
+        mock_api_class.assert_called_once_with(proxy_config=mock_proxy)
 
     def test_empty_video_id_raises_error(self):
         """Should raise TranscriptError for empty video ID."""

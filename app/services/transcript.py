@@ -2,10 +2,26 @@
 
 from youtube_transcript_api import YouTubeTranscriptApi
 from youtube_transcript_api.formatters import TextFormatter
+from youtube_transcript_api.proxies import GenericProxyConfig
 
+from app.config import YOUTUBE_PROXY_URL
 from app.core.constants import TRANSCRIPT_LANGUAGES
 from app.core.exceptions import TranscriptError
 from app.utils.logger import logger
+
+
+def _create_transcript_api() -> YouTubeTranscriptApi:
+    """Create a YouTube transcript client, using a proxy when configured."""
+    if YOUTUBE_PROXY_URL:
+        logger.info("Using configured proxy for YouTube transcript requests.")
+        return YouTubeTranscriptApi(
+            proxy_config=GenericProxyConfig(
+                http_url=YOUTUBE_PROXY_URL,
+                https_url=YOUTUBE_PROXY_URL,
+            )
+        )
+
+    return YouTubeTranscriptApi()
 
 
 def fetch_captions(video_id: str) -> str:
@@ -25,7 +41,7 @@ def fetch_captions(video_id: str) -> str:
         raise TranscriptError("Video ID cannot be empty.")
 
     clean_video_id = video_id.strip()
-    api = YouTubeTranscriptApi()
+    api = _create_transcript_api()
 
     try:
         transcript_data = (

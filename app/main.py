@@ -1,21 +1,46 @@
 """FastAPI application entry point."""
 
-from fastapi import BackgroundTasks, FastAPI, Header, HTTPException, Request
+from contextlib import asynccontextmanager
 
-from app.config import TELEGRAM_SECRET_TOKEN
+from fastapi import BackgroundTasks, FastAPI, Header, HTTPException, Request
+from sqlalchemy import text
+
+from app.config import AUTO_INIT_DB, TELEGRAM_SECRET_TOKEN
 from app.core.validators import validate_chat_id, validate_youtube_url
-from app.db import init_db
+from app.db import SessionLocal, init_db
 from app.services.orchestrator import process_video
 from app.services.telegram import send_text
 from app.utils.logger import logger
 
-app = FastAPI(title="YouTube to Twi Bot", version="0.1.0")
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    """Initialize runtime resources."""
+    if AUTO_INIT_DB:
+        init_db()
+        logger.info("Database schema initialized.")
+    yield
 
 
-@app.on_event("startup")
-def startup() -> None:
-    """Initialize database schema on application startup."""
-    init_db()
+app = FastAPI(title="YouTube to Twi Bot", version="0.1.0", lifespan=lifespan)
+
+
+@app.get("/healthz")
+def healthz():
+    """Lightweight liveness check for Cloud Run."""
+    return {"status": "ok"}
+
+
+@app.get("/readyz")
+def readyz():
+    """Readiness check that verifies database connectivity."""
+    try:
+        with SessionLocal() as session:
+            session.execute(text("SELECT 1"))
+        return {"status": "ok"}
+    except Exception as error:
+        logger.error(f"Readiness check failed: {error}")
+        raise HTTPException(status_code=503, detail="Database unavailable")
 
 
 @app.post("/webhook/telegram")
