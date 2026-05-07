@@ -36,27 +36,13 @@ def _word_count(text: str) -> int:
     return len(WORD_PATTERN.findall(text))
 
 
-def _max_summary_words(source_word_count: int) -> int:
-    """Compute a short summary limit based on source size."""
-    if source_word_count <= 0:
-        return 60
-
-    if source_word_count < 40:
-        max_words = max(8, source_word_count // 2)
-    else:
-        max_words = min(120, max(30, source_word_count // 4))
-
-    # Always enforce that summary is shorter than source.
-    return min(max_words, max(8, source_word_count - 5))
-
-
-def _needs_rewrite(summary: str, source_word_count: int, target_max_words: int) -> bool:
+def _needs_rewrite(summary: str, source_word_count: int) -> bool:
     """Check whether summary should be simplified or shortened."""
     summary_words = _word_count(summary)
     words = WORD_PATTERN.findall(summary.lower())
     long_words = [w for w in words if len(w) >= 11]
 
-    too_long = summary_words >= source_word_count or summary_words > target_max_words
+    too_long = summary_words >= source_word_count
     too_complex = bool(words) and (len(long_words) / len(words)) > 0.10
     return too_long or too_complex
 
@@ -96,12 +82,10 @@ def summarize_transcript(transcript: str) -> str | None:
 
     clean_transcript = transcript.strip()
     transcript_words = _word_count(clean_transcript)
-    target_max_words = _max_summary_words(transcript_words)
 
     base_prompt = _render_prompt(
         BASE_PROMPT_FILE,
         source_words=transcript_words,
-        max_words=target_max_words,
         transcript=clean_transcript,
     )
     if base_prompt is None:
@@ -112,11 +96,10 @@ def summarize_transcript(transcript: str) -> str | None:
         if summary is None:
             return None
 
-        if _needs_rewrite(summary, transcript_words, target_max_words):
+        if _needs_rewrite(summary, transcript_words):
             rewrite_prompt = _render_prompt(
                 REWRITE_PROMPT_FILE,
                 source_words=transcript_words,
-                max_words=target_max_words,
                 summary=summary,
             )
             if rewrite_prompt is not None:

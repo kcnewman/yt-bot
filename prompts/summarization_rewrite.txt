@@ -1,0 +1,11 @@
+Rewrite the summary below to make it shorter and simpler.
+
+Rules:
+- Make it useful and complete, but shorter than {source_words} words.
+- Use simple, everyday English that is easy to translate into Twi.
+- Avoid long or rare words when simpler words exist.
+- Keep short, direct sentences.
+- Return only the rewritten summary.
+
+Summary:
+{summary}
