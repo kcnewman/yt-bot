@@ -36,15 +36,40 @@ Thumbs.db
 htmlcov/
 .tox/
 pytest.ini
+junit.xml
+coverage.xml
 
 # Type checking
 .mypy_cache/
 .dmypy.json
 dmypy.json
+.pyre/
+.ruff_cache/
+.cache/
 
 # Local logs
 logs/
 *.log
+
+# Local database files
+data/
+*.db
+*.db-*
+*.sqlite
+*.sqlite-*
+*.sqlite3
+*.sqlite3-*
+
+# Generated media / temp artifacts
+audio_*.mp3
+audio_tempo_*.mp3
+audio_cache_*.mp3
+tmp/
+temp/
+
+# Local cleanup notes
+BEFORE_AFTER.md
+CLEANUP_SUMMARY.md
 
 # Build artifacts
 .build/

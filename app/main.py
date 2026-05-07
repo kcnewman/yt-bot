@@ -4,11 +4,18 @@ from fastapi import BackgroundTasks, FastAPI, Header, HTTPException, Request
 
 from app.config import TELEGRAM_SECRET_TOKEN
 from app.core.validators import validate_chat_id, validate_youtube_url
+from app.db import init_db
 from app.services.orchestrator import process_video
 from app.services.telegram import send_text
 from app.utils.logger import logger
 
 app = FastAPI(title="YouTube to Twi Bot", version="0.1.0")
+
+
+@app.on_event("startup")
+def startup() -> None:
+    """Initialize database schema on application startup."""
+    init_db()
 
 
 @app.post("/webhook/telegram")

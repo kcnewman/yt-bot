@@ -48,3 +48,9 @@ except ValueError:
 # Paths
 BASE_DIR = Path(__file__).resolve().parents[1]
 PROMPTS_DIR = BASE_DIR / "prompts"
+
+# Database Configuration
+DATABASE_URL = _get_optional_env(
+    "DATABASE_URL",
+    f"sqlite:///{BASE_DIR / 'data' / 'yt_bot.db'}",
+)
