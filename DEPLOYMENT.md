@@ -1,6 +1,6 @@
-# GCP Deployment
+# Deployment
 
-This app is packaged for Cloud Run.
+The app is packaged for Cloud Run.
 
 ## Required Services
 
@@ -10,9 +10,9 @@ This app is packaged for Cloud Run.
 - Secret Manager
 - Artifact Registry
 
-## Runtime Environment
+## Environment Variables
 
-Set these variables on the Cloud Run service:
+Set these on the Cloud Run service:
 
 ```env
 APP_ENV=production
@@ -28,17 +28,17 @@ TTS_TEMPO=1.0
 LOG_LEVEL=INFO
 ```
 
-Use Secret Manager for tokens, API keys, and database credentials.
-Use a rotating residential proxy for `YOUTUBE_PROXY_URL`; datacenter proxies are commonly blocked by YouTube.
-Logs are written to stdout/stderr for Cloud Run ingestion.
+Use Secret Manager for tokens, API keys, and database credentials. Use a rotating residential proxy for `YOUTUBE_PROXY_URL`; datacenter proxies are commonly blocked by YouTube.
 
-The Cloud Run service account needs at least:
+## IAM
+
+The Cloud Run service account needs:
 
 - Cloud SQL Client
 - Vertex AI User
-- Secret Manager Secret Accessor, if secrets are mounted from Secret Manager
+- Secret Manager Secret Accessor (if mounting secrets)
 
-## Build And Deploy
+## Build and Deploy
 
 ```bash
 gcloud builds submit --tag REGION-docker.pkg.dev/PROJECT/REPOSITORY/yt-bot:latest
@@ -53,9 +53,9 @@ gcloud run deploy yt-bot \
 
 ## Health Checks
 
-- `/healthz` is a lightweight liveness check.
-- `/readyz` verifies database connectivity.
+- `/healthz` — liveness check
+- `/readyz` — database connectivity check
 
 ## Notes
 
-`AUTO_INIT_DB=true` uses SQLAlchemy to create missing tables at startup. This is acceptable for the current MVP, but production should move to Alembic migrations before schema changes become frequent.
+`AUTO_INIT_DB=true` creates tables at startup via SQLAlchemy. Migrate to Alembic before schema changes become frequent.

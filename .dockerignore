@@ -23,8 +23,6 @@ logs
 *.sqlite3-*
 *.log
 
-BEFORE_AFTER.md
-CLEANUP_SUMMARY.md
 
 htmlcov
 .coverage

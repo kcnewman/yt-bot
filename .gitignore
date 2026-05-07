@@ -67,9 +67,6 @@ audio_cache_*.mp3
 tmp/
 temp/
 
-# Local cleanup notes
-BEFORE_AFTER.md
-CLEANUP_SUMMARY.md
 
 # Build artifacts
 .build/

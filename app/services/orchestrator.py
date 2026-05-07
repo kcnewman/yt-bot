@@ -172,7 +172,7 @@ def process_video(url: str, chat_id: int) -> None:
     if cached_video and cached_video.audio_data:
         cache_hit = True
         logger.info(f"Video cache hit: {video_id}")
-        audio_path: str | None = None
+        audio_path = None
         try:
             edit_text(chat_id, status_msg, STATUS_RECORDING)
             audio_path = _write_cached_audio(cached_video.audio_data)

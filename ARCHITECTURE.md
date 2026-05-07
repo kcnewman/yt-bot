@@ -1,267 +1,145 @@
-# Architecture & Code Organization
+# Architecture
 
 ## Overview
 
-This document explains the professional software engineering structure of the YouTube to Twi Bot project.
+The project is structured around a linear pipeline: validate input, extract transcript, classify content, summarize, translate, generate audio, deliver to user. Each step is an isolated module with a single responsibility.
 
-## Core Principles
+## Principles
 
-- **Separation of Concerns**: Each module has a single, well-defined responsibility
-- **Graceful Failure**: Services raise specific exceptions for structured error handling
-- **Reusability**: Common logic extracted to utilities and constants
-- **Simplicity**: Straightforward code without unnecessary abstractions
-- **Logging**: Comprehensive, structured logging at each step
+- **Separation of concerns** — each module has one job
+- **Explicit error handling** — services raise specific exceptions
+- **Reusability** — common logic in shared utilities
+- **Simplicity** — no unnecessary abstractions
 
 ## Directory Structure
 
 ```
 app/
-├── __init__.py              # Package initialization
-├── config.py                # Environment configuration & validation
-├── main.py                  # FastAPI application entry point
-├── core/                    # Core application abstractions
+├── __init__.py
+├── config.py                # Environment config with validation
+├── main.py                  # FastAPI entry point
+├── core/
 │   ├── __init__.py
-│   ├── constants.py         # Centralized string & number constants
+│   ├── constants.py         # All magic strings and numbers
 │   ├── exceptions.py        # Custom exception classes
-│   ├── validators.py        # Input validation logic
-│   └── clients.py           # External API client initialization
-├── services/                # Business logic services
+│   ├── validators.py        # Input validation
+│   └── clients.py           # External API client init
+├── db/
 │   ├── __init__.py
-│   ├── orchestrator.py      # Pipeline orchestration
+│   ├── database.py          # DB connection and session management
+│   ├── models.py            # SQLAlchemy ORM models
+│   └── repository.py        # Data access layer
+├── services/
+│   ├── __init__.py
+│   ├── orchestrator.py      # Pipeline coordinator
 │   ├── transcript.py        # YouTube transcript extraction
 │   ├── classify.py          # Content type classification
-│   ├── summarize.py         # LLM-based summarization
-│   ├── translate.py         # Twi language translation
-│   ├── tts.py               # Text-to-speech audio generation
-│   └── telegram.py          # Telegram bot API client
-└── utils/                   # Utility functions
+│   ├── summarize.py         # LLM summarization
+│   ├── translate.py         # Twi translation
+│   ├── tts.py               # Text-to-speech
+│   └── telegram.py          # Telegram API client
+└── utils/
     ├── __init__.py
-    ├── logger.py            # Structured logging setup
-    ├── youtube.py           # YouTube URL parsing
+    ├── logger.py            # Structured logging
+    ├── youtube.py           # URL parsing
     └── prompt.py            # Prompt template loading
+prompts/                     # LLM prompt templates
+migrations/                  # SQL schema migrations
 ```
 
-## Key Components
+## Core Module
 
-### 1. Configuration (`config.py`)
+### Exceptions (`core/exceptions.py`)
 
-- Loads environment variables with validation
-- Provides sensible defaults
-- Warns about missing required configuration
-- Centralizes all config access
+Exception hierarchy for type-safe error handling:
 
-**Usage:**
-```python
-from app.config import TELEGRAM_BOT_TOKEN, GCP_PROJECT_ID
-```
+- `BotException` — base class
+- `TranscriptError` — transcript extraction failure
+- `SummarizationError` — summarization failure
+- `TranslationError` — translation failure
+- `TTSError` — audio generation failure
+- `ValidationError` — input validation failure
 
-### 2. Core Module (`app/core/`)
+### Constants (`core/constants.py`)
 
-#### Exceptions (`exceptions.py`)
-Custom exception hierarchy for type-safe error handling:
-- `BotException` - Base class
-- `TranscriptError` - Transcript extraction failures
-- `SummarizationError` - Summarization failures
-- `TranslationError` - Translation failures
-- `TTSError` - Audio generation failures
-- `ValidationError` - Input validation failures
+All API endpoints, model names, status messages, and error messages in one file. No magic strings in service code.
 
-**Usage:**
-```python
-try:
-    transcript = fetch_captions(video_id)
-except TranscriptError as e:
-    logger.error(f"Failed to get transcript: {e}")
-    # Handle gracefully
-```
+### Validators (`core/validators.py`)
 
-#### Constants (`constants.py`)
-All magic strings and numbers in one place:
-- API endpoints and configuration
-- Status messages
-- Error messages
-- Model names and parameters
+- `validate_youtube_url()` — extract and validate video ID
+- `validate_text()` — validate non-empty text
+- `validate_chat_id()` — validate Telegram chat ID
 
-**Benefits:**
-- No repeated strings across codebase
-- Easy to modify messages without searching
-- Centralized configuration of all services
+### Clients (`core/clients.py`)
 
-#### Validators (`validators.py`)
-Input validation at service boundaries:
-- `validate_youtube_url()` - Validates and extracts video ID
-- `validate_text()` - Validates text input
-- `validate_chat_id()` - Validates Telegram chat ID
+Centralized external API client setup:
 
-**Usage:**
-```python
-from app.core.validators import validate_youtube_url
-try:
-    video_id = validate_youtube_url(user_input)
-except ValidationError as e:
-    send_error_message(e.message)
-```
+- `create_genai_client()` — Google GenAI client with error handling
 
-#### Clients (`clients.py`)
-Centralized initialization of external API clients:
-- `create_genai_client()` - Google GenAI client initialization
-- Handles authentication and error cases
-
-### 3. Services (`app/services/`)
-
-Each service is a focused module handling one aspect of the pipeline:
-
-#### Orchestrator (`orchestrator.py`)
-Main coordinator of the entire pipeline:
-- Validates input
-- Calls services in sequence
-- Handles errors at each step
-- Sends user updates via Telegram
-- Cleans up temporary resources
-
-**Flow:**
-1. Validate YouTube URL
-2. Extract transcript
-3. Classify content type
-4. Generate summary
-5. Translate to Twi
-6. Generate audio
-7. Send to user
-
-#### Transcript Service (`transcript.py`)
-- Extracts English captions from YouTube videos
-- Raises `TranscriptError` on failure
-- Returns raw transcript text
-
-#### Classification Service (`classify.py`)
-- Classifies content type (tutorial, interview, news, etc.)
-- Helps tailor summarization
-- Falls back to "general" on error
-
-#### Summarization Service (`summarize.py`)
-- Generates concise summaries using LLM
-- Validates summary quality (length, complexity)
-- Reruns if needed
-- Raises `SummarizationError` on failure
-
-#### Translation Service (`translate.py`)
-- Translates English summaries to Twi
-- Calls Khaya AI API
-- Raises `TranslationError` on failure
-
-#### TTS Service (`tts.py`)
-- Converts Twi text to speech audio
-- Calls Khaya AI API
-- Applies tempo adjustment
-- Raises `TTSError` on failure
-
-#### Telegram Service (`telegram.py`)
-- Wrapper around Telegram Bot API
-- Returns boolean/int to indicate success
-- Handles file uploads
-- Returns False/None on error instead of raising
-
-### 4. Utilities (`app/utils/`)
-
-#### Logger (`logger.py`)
-Structured logging with:
-- Console output (immediate feedback)
-- File logging (persistent record)
-- Daily log rotation (14-day retention)
-- Consistent formatting
-
-#### YouTube Utilities (`youtube.py`)
-- Parses various YouTube URL formats
-- Extracts 11-character video ID
-- Used by validators
-
-#### Prompt Loading (`prompt.py`)
-- Loads prompt templates from disk
-- Handles missing/empty files gracefully
-- Returns empty string on error (fail-safe)
-
-## Error Handling Strategy
-
-### Service Layer
-Services that call external APIs raise specific exceptions:
-- Validation fails → `ValidationError`
-- Transcript missing → `TranscriptError`
-- LLM fails → `SummarizationError`
-- Translation fails → `TranslationError`
-- Audio generation fails → `TTSError`
+## Services
 
 ### Orchestrator
-Catches exceptions and converts to user messages:
-```python
-try:
-    summary = summarize_transcript(transcript)
-except SummarizationError as error:
-    logger.error(f"Summarization failed: {error}")
-    send_text(chat_id, "Oops, summarization failed. Try again?")
-    return
-```
 
-### Telegram Service
-Returns boolean for success instead of raising:
-- Allows graceful degradation
-- User messages always delivered (either audio or text)
+Runs the pipeline in sequence: validate → transcript → classify → summarize → translate → TTS → Telegram. Each step has its own try/except block. Converts exceptions to user-facing messages.
+
+### Transcript
+
+Extracts English captions via `youtube_transcript_api`. Raises `TranscriptError` on failure.
+
+### Classify
+
+Classifies content type (tutorial, interview, news, etc.) using Gemini. Falls back to "general" on error.
+
+### Summarize
+
+Generates a summary using Gemini. Validates output length/quality. Retries if quality checks fail. Raises `SummarizationError` on failure.
+
+### Translate
+
+Translates English to Twi via Khaya AI API. Raises `TranslationError` on failure.
+
+### TTS
+
+Converts Twi text to speech via Khaya AI API. Applies tempo adjustment with ffmpeg. Raises `TTSError` on failure.
+
+### Telegram
+
+Wrapper around the Telegram Bot API. Returns `bool`/`int` on success, `False`/`None` on failure (no exceptions — graceful degradation).
+
+## Error Handling
+
+- **Services** raise typed exceptions for failures
+- **Orchestrator** catches each exception and sends a user-friendly message
+- **Telegram service** returns `False`/`None` instead of raising — ensures the user always gets a response (audio or text fallback)
 
 ## Logging
 
-Consistent logging at each step:
+Levels:
+- `debug` — development details
+- `info` — major pipeline steps
+- `warning` — recoverable issues
+- `error` — failures with traceback
 
-```python
-logger.info("Pipeline started")          # Major steps
-logger.warning("Transcript empty")       # Recoverable issues
-logger.error("API failed", exc_info=True) # Errors with context
-logger.debug("Extracted video ID")       # Development info
-```
+Output to console. On Cloud Run, logs are picked up by Cloud Logging from stdout.
 
-## Adding New Features
+## Testing
 
-### New External Service
-1. Add URL/model to `constants.py`
+Services are designed for straightforward testing:
+- Validators: unit test with valid/invalid input
+- Services: mock external APIs, assert exception types
+- Orchestrator: mock services, verify error paths
+
+## Adding a New Feature
+
+1. Add endpoints/params to `core/constants.py`
 2. Create service in `services/`
-3. Raise specific exception on failure
-4. Call from orchestrator with try/except
-5. Convert exception to user message
-
-### New Input Validation
-1. Add validator to `core/validators.py`
-2. Use in main.py webhook or service
-3. Raise `ValidationError` if invalid
-
-### New Constant
-Add to `core/constants.py` instead of hardcoding.
-
-## Testing Strategy
-
-Services are designed to be testable:
-- Validators can be unit tested
-- Services can be mocked (raise exceptions)
-- Orchestrator logic is linear and observable
-
-Example:
-```python
-def test_summarize_empty_transcript():
-    with pytest.raises(SummarizationError):
-        summarize_transcript("")
-
-def test_translate_missing_api_key():
-    with pytest.raises(TranslationError):
-        translate("hello")
-```
-
-## Performance Considerations
-
-- FastAPI background tasks prevent webhook timeouts
-- Single Telegram message edit for status updates (efficient)
-- Temporary files cleaned up after sending
-- Logging doesn't block execution
+3. Raise typed exception on failure
+4. Add try/except in orchestrator
+5. Map exception to user message
 
 ## Security
 
-- Secret token validation on webhook
-- API keys in environment variables (not hardcoded)
+- Webhook secret token validation
+- API keys in environment variables only
 - Input validation at all boundaries
-- Error messages don't expose internal details
+- Error messages do not leak internals
