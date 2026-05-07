@@ -81,7 +81,11 @@ def _apply_tempo_filter(audio_path: str, tempo: float) -> str:
 
 def _request_tts_audio(text: str) -> bytes | None:
     """Request MP3 audio bytes from Khaya TTS."""
-    payload = {"text": text, "language": TTS_LANGUAGE, "format": TTS_FORMAT}
+    payload = {
+        "text": text,
+        "language": TTS_LANGUAGE,
+        "format": TTS_FORMAT,
+    }
 
     try:
         response = requests.post(
