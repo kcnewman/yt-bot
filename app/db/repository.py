@@ -6,7 +6,8 @@ from contextlib import contextmanager
 from sqlalchemy.orm import Session, sessionmaker
 
 from app.db.database import SessionLocal
-from app.db.models import ProcessedVideo, RequestLog, utc_now
+from app.db.models import ProcessedVideo, RequestLog
+from app.utils.time import utc_now
 
 
 class DatabaseRepository:
@@ -14,10 +15,29 @@ class DatabaseRepository:
 
     def __init__(self, session_factory: sessionmaker[Session] = SessionLocal) -> None:
         self.session_factory = session_factory
+        self._request_session: Session | None = None
+
+    @contextmanager
+    def request_scope(self) -> Generator[Session, None, None]:
+        """Single transactional session for the entire request pipeline."""
+        session = self.session_factory()
+        self._request_session = session
+        try:
+            yield session
+            session.commit()
+        except Exception:
+            session.rollback()
+            raise
+        finally:
+            session.close()
+            self._request_session = None
 
     @contextmanager
     def session_scope(self) -> Generator[Session, None, None]:
-        """Provide a transactional session scope."""
+        """Fallback session scope when not in a request_scope."""
+        if self._request_session is not None:
+            yield self._request_session
+            return
         session = self.session_factory()
         try:
             yield session

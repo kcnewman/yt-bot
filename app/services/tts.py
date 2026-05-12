@@ -9,16 +9,8 @@ import requests
 from app.config import KHAYA_API_KEY, TTS_TEMPO
 from app.core.constants import TIMEOUT_SECONDS, TTS_FORMAT, TTS_LANGUAGE, TTS_URL
 from app.core.exceptions import TTSError
+from app.core.http_utils import build_khaya_headers
 from app.utils.logger import logger
-
-
-def _build_headers() -> dict[str, str]:
-    """Build HTTP headers for Khaya TTS API."""
-    return {
-        "Ocp-Apim-Subscription-Key": KHAYA_API_KEY or "",
-        "Content-Type": "application/json",
-        "Cache-Control": "no-cache",
-    }
 
 
 def _get_audio_path(prefix: str = "audio") -> str:
@@ -120,7 +112,7 @@ def _request_audio_from_api(text: str) -> bytes:
         response = requests.post(
             TTS_URL,
             json=payload,
-            headers=_build_headers(),
+            headers=build_khaya_headers(),
             timeout=TIMEOUT_SECONDS,
         )
         response.raise_for_status()

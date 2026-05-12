@@ -64,6 +64,18 @@ except ValueError:
     logger.warning(f"Invalid TTS_TEMPO value: {_tts_tempo_str}, using default 1.0")
     TTS_TEMPO = 1.0
 
+# Pipeline Configuration
+_pipeline_workers_str = _get_optional_env("PIPELINE_WORKERS", "2")
+try:
+    PIPELINE_WORKERS: int = max(1, int(_pipeline_workers_str))
+except ValueError:
+    from app.utils.logger import logger
+
+    logger.warning(
+        f"Invalid PIPELINE_WORKERS value: {_pipeline_workers_str}, using default 2"
+    )
+    PIPELINE_WORKERS = 2
+
 # Paths
 BASE_DIR = Path(__file__).resolve().parents[1]
 PROMPTS_DIR = BASE_DIR / "prompts"

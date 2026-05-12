@@ -6,16 +6,8 @@ from requests.exceptions import RequestException
 from app.config import KHAYA_API_KEY
 from app.core.constants import TIMEOUT_SECONDS, TRANSLATE_LANG, TRANSLATE_URL
 from app.core.exceptions import TranslationError
+from app.core.http_utils import build_khaya_headers
 from app.utils.logger import logger
-
-
-def _build_headers() -> dict[str, str]:
-    """Build HTTP headers for Khaya translation API."""
-    return {
-        "Ocp-Apim-Subscription-Key": KHAYA_API_KEY or "",
-        "Content-Type": "application/json",
-        "Cache-Control": "no-cache",
-    }
 
 
 def translate(text: str) -> str:
@@ -44,12 +36,13 @@ def translate(text: str) -> str:
         response = requests.post(
             TRANSLATE_URL,
             json=payload,
-            headers=_build_headers(),
+            headers=build_khaya_headers(),
             timeout=TIMEOUT_SECONDS,
         )
         response.raise_for_status()
 
-        translation = response.text.strip()
+        data = response.json()
+        translation = (data.get("translation") or data.get("result") or "").strip()
         if not translation:
             raise TranslationError("Translation API returned empty response.")
 
@@ -58,12 +51,10 @@ def translate(text: str) -> str:
 
     except RequestException as error:
         error_msg = f"Translation API request failed: {error}"
-        if hasattr(error, "response") and error.response is not None:
+        if error.response is not None:
             error_msg += f" (Server: {error.response.text})"
         logger.error(error_msg)
         raise TranslationError(error_msg)
-    except TranslationError:
-        raise
     except Exception as error:
         logger.error(f"Unexpected error during translation: {error}", exc_info=True)
         raise TranslationError(f"Translation failed: {error}")

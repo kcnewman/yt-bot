@@ -1,5 +1,8 @@
 """Transcript extraction service."""
 
+import html
+import json
+import re
 from typing import Any
 
 from youtube_transcript_api import YouTubeTranscriptApi
@@ -9,35 +12,32 @@ from app.core.constants import TRANSCRIPT_LANGUAGES
 from app.core.exceptions import TranscriptError
 from app.utils.logger import logger
 
-
-def _create_transcript_api() -> YouTubeTranscriptApi:
-    """Create a YouTube transcript client."""
-    return YouTubeTranscriptApi()
+VTT_TAG_RE = re.compile(r"<[^>]+>")
 
 
 def _parse_vtt(text: str) -> str:
     """Strip WebVTT / SRT formatting and return plain text."""
-    import html
-
     lines: list[str] = []
     for line in text.splitlines():
         line = line.strip()
         if not line:
             continue
-        if line.startswith("WEBVTT") or line.startswith("Kind:") or line.startswith("Language:"):
+        if (
+            line.startswith("WEBVTT")
+            or line.startswith("Kind:")
+            or line.startswith("Language:")
+        ):
             continue
         if "-->" in line:
             continue
         line = html.unescape(line)
-        line = line.replace("<c>", "").replace("</c>", "")
+        line = VTT_TAG_RE.sub("", line)
         lines.append(line)
     return " ".join(lines).strip()
 
 
 def _parse_json_subs(text: str) -> str:
     """Parse YouTube JSON subtitle format (json3 / srv3 / srv2)."""
-    import json
-
     data = json.loads(text)
     parts: list[str] = []
 
@@ -82,14 +82,18 @@ def _fetch_with_ytdlp(video_id: str) -> str:
                 continue
 
             response = ydl.urlopen(sub_url)
-            raw = response.read().decode("utf-8")
+            raw = response.read().decode("utf-8", errors="replace")
 
-            ext = sub_url.rsplit(".", 1)[-1].split("?")[0]
-            text = _parse_json_subs(raw) if ext in ("json3", "srv3", "srv2") else _parse_vtt(raw)
+            text = (
+                _parse_json_subs(raw)
+                if raw.strip().startswith(("{", "["))
+                else _parse_vtt(raw)
+            )
 
             if text:
+                fmt = "json" if raw.strip().startswith(("{", "[")) else "vtt"
                 logger.info(
-                    f"yt-dlp extracted transcript from {source_key} (format={ext}, "
+                    f"yt-dlp extracted transcript from {source_key} (format={fmt}, "
                     f"{len(text)} chars)"
                 )
                 return text
@@ -116,7 +120,7 @@ def fetch_captions(video_id: str) -> str:
         raise TranscriptError("Video ID cannot be empty.")
 
     clean_video_id = video_id.strip()
-    api = _create_transcript_api()
+    api = YouTubeTranscriptApi()
 
     # Primary path: youtube-transcript-api
     try:
@@ -144,4 +148,4 @@ def fetch_captions(video_id: str) -> str:
         raise
     except Exception as error:
         logger.error(f"yt-dlp fallback also failed for {clean_video_id}: {error}")
-        raise TranscriptError(f"Could not extract transcript: {error}")
+        raise TranscriptError(f"Could not extract transcript: {error}") from error

@@ -89,6 +89,10 @@ def _generate_text(prompt: str) -> str:
         response = client.models.generate_content(
             model=SUMMARIZE_MODEL, contents=prompt
         )
+        if hasattr(response, "prompt_feedback") and response.prompt_feedback.block_reason:
+            raise SummarizationError(
+                f"Content blocked: {response.prompt_feedback.block_reason}"
+            )
         if not response.text:
             raise SummarizationError("Model returned empty response.")
         return response.text.strip()
@@ -144,4 +148,4 @@ def summarize_transcript(transcript: str, content_type: str = "general") -> str:
         raise
     except Exception as error:
         logger.error(f"Unexpected error during summarization: {error}", exc_info=True)
-        raise SummarizationError(f"Summarization failed: {error}")
+        raise SummarizationError(f"Summarization failed: {error}") from error

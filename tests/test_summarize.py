@@ -1,6 +1,6 @@
 """Tests for summarization service."""
 
-from unittest.mock import MagicMock, Mock, patch
+from unittest.mock import Mock, patch
 
 import pytest
 
@@ -10,6 +10,14 @@ from app.services.summarize import (
     _should_rewrite,
     summarize_transcript,
 )
+
+
+def _make_mock_response(text: str) -> Mock:
+    resp = Mock()
+    resp.text = text
+    resp.prompt_feedback = Mock()
+    resp.prompt_feedback.block_reason = None
+    return resp
 
 
 class TestCountWords:
@@ -84,8 +92,7 @@ class TestSummarizeTranscript:
         """Should generate summary successfully."""
         # Setup mocks
         mock_load_prompt.return_value = "Summarize: {transcript}"
-        mock_response = Mock()
-        mock_response.text = "This is a summary"
+        mock_response = _make_mock_response("This is a summary")
         mock_client.models.generate_content.return_value = mock_response
 
         transcript = "This is a long transcript about topics. " * 10
@@ -110,8 +117,7 @@ class TestSummarizeTranscript:
     def test_empty_model_response_raises_error(self, mock_client, mock_load_prompt):
         """Should raise error when model returns empty response."""
         mock_load_prompt.return_value = "Summarize: {transcript}"
-        mock_response = Mock()
-        mock_response.text = ""
+        mock_response = _make_mock_response("")
         mock_client.models.generate_content.return_value = mock_response
 
         transcript = "test transcript content here"
@@ -146,12 +152,11 @@ class TestSummarizeTranscript:
     def test_custom_content_type(self, mock_client, mock_load_prompt):
         """Should use content_type parameter."""
         mock_load_prompt.return_value = "Summarize {content_type}: {transcript}"
-        mock_response = Mock()
-        mock_response.text = "Short summary only"
+        mock_response = _make_mock_response("Short summary only")
         mock_client.models.generate_content.return_value = mock_response
 
         transcript = "Educational content here " * 50
 
-        result = summarize_transcript(transcript, content_type="educational")
+        result = summarize_transcript(transcript, content_type="tutorial")
 
         assert result == "Short summary only"
