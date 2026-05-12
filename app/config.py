@@ -53,6 +53,8 @@ GCP_REGION = _get_optional_env("GCP_REGION", "us-central1")
 
 # External API Configuration
 KHAYA_API_KEY = _get_required_env("KHAYA_API_KEY")
+YOUTUBE_PROXY_URL = _get_optional_env("YOUTUBE_PROXY_URL")
+YOUTUBE_COOKIES_FILE = _get_optional_env("YOUTUBE_COOKIES_FILE")
 
 # TTS Tempo Configuration
 _tts_tempo_str = _get_optional_env("TTS_TEMPO", "1.0")

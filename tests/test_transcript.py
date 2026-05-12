@@ -204,9 +204,10 @@ class TestFetchCaptions:
         assert result == "Fallback transcript"
         mock_fallback.assert_called_once_with("dQw4w9WgXcQ")
 
+    @patch("app.services.transcript.time.sleep")
     @patch("app.services.transcript._fetch_with_ytdlp")
     @patch("app.services.transcript.YouTubeTranscriptApi")
-    def test_both_fail_raises_error(self, mock_api_class, mock_fallback):
+    def test_both_fail_raises_error(self, mock_api_class, mock_fallback, mock_sleep):
         """Should raise TranscriptError when both methods fail."""
         mock_api = Mock()
         mock_api_class.return_value = mock_api

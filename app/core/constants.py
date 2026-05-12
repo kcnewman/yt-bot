@@ -5,6 +5,8 @@ TIMEOUT_SECONDS = 30
 
 # Transcript
 TRANSCRIPT_LANGUAGES = ["en"]
+TRANSCRIPT_RETRIES = 3
+TRANSCRIPT_INITIAL_DELAY = 1.5
 
 # Summarization
 SUMMARIZE_MODEL = "gemini-2.5-flash-lite"
