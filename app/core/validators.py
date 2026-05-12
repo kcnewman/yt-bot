@@ -4,7 +4,7 @@ from app.core.exceptions import ValidationError
 from app.utils.youtube import extract_video_id
 
 
-def validate_youtube_url(url: str) -> str:
+def validate_youtube_url(url: str | None) -> str:
     if not url or not url.strip():
         raise ValidationError("URL cannot be empty.")
 

@@ -109,14 +109,18 @@ def process_video(url: str, chat_id: int) -> None:
         if not video_id:
             raise ValidationError("Invalid YouTube URL.")
     except ValidationError:
-        request_log_id = db_repository.create_request_log(chat_id, url, None)
+        request_log_id = db_repository.create_request_log(
+            chat_id=chat_id, url=url, video_id=None
+        )
         _complete(status="invalid_url", error_message="Invalid YouTube URL.")
         send_text(chat_id, MSG_INVALID_URL)
         return
 
     try:
         with db_repository.request_scope():
-            request_log_id = db_repository.create_request_log(chat_id, url, video_id)
+            request_log_id = db_repository.create_request_log(
+                chat_id=chat_id, url=url, video_id=video_id
+            )
 
             status_msg = send_text(chat_id, STATUS_EXTRACTING)
             if not status_msg:

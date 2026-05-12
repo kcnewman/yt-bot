@@ -28,7 +28,7 @@ class TestValidateYoutubeUrl:
 
     def test_none_url_raises_error(self):
         with pytest.raises(ValidationError, match="URL cannot be empty"):
-            validate_youtube_url(None)
+            validate_youtube_url(None)  # type: ignore[arg-type]
 
     def test_invalid_url_raises_error(self):
         with pytest.raises(ValidationError, match="Invalid YouTube URL"):
@@ -53,11 +53,11 @@ class TestValidateChatId:
 
     def test_non_integer_raises_error(self):
         with pytest.raises(ValidationError, match="Chat ID must be an integer"):
-            validate_chat_id("12345")
+            validate_chat_id("12345")  # pyright: ignore[reportArgumentType]
 
     def test_float_raises_error(self):
         with pytest.raises(ValidationError, match="Chat ID must be an integer"):
-            validate_chat_id(123.45)
+            validate_chat_id(123.45)  # pyright: ignore[reportArgumentType]
 
     def test_bool_raises_error(self):
         with pytest.raises(ValidationError, match="Chat ID must be an integer"):

@@ -13,7 +13,11 @@ from youtube_transcript_api import YouTubeTranscriptApi
 from youtube_transcript_api.formatters import TextFormatter
 
 from app.config import YOUTUBE_COOKIES_FILE, YOUTUBE_PROXY_URL
-from app.core.constants import TRANSCRIPT_INITIAL_DELAY, TRANSCRIPT_LANGUAGES, TRANSCRIPT_RETRIES
+from app.core.constants import (
+    TRANSCRIPT_INITIAL_DELAY,
+    TRANSCRIPT_LANGUAGES,
+    TRANSCRIPT_RETRIES,
+)
 from app.core.exceptions import TranscriptError
 from app.utils.logger import logger
 
@@ -39,10 +43,7 @@ _USER_AGENTS = [
         "AppleWebKit/605.1.15 (KHTML, like Gecko) "
         "Version/17.5 Safari/605.1.15"
     ),
-    (
-        "Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:127.0) "
-        "Gecko/20100101 Firefox/127.0"
-    ),
+    ("Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:127.0) Gecko/20100101 Firefox/127.0"),
 ]
 
 
@@ -53,7 +54,11 @@ def _parse_vtt(text: str) -> str:
         line = line.strip()
         if not line:
             continue
-        if line.startswith("WEBVTT") or line.startswith("Kind:") or line.startswith("Language:"):
+        if (
+            line.startswith("WEBVTT")
+            or line.startswith("Kind:")
+            or line.startswith("Language:")
+        ):
             continue
         if "-->" in line:
             continue
@@ -92,7 +97,7 @@ def _build_http_headers() -> dict[str, str]:
     }
 
 
-def _build_ydl_opts() -> dict[str, Any]:
+def _build_ydl_opts() -> Any:
     """Build yt-dlp options with browser-like headers and optional proxy/cookies."""
     opts: dict[str, Any] = {
         "quiet": True,
@@ -178,7 +183,11 @@ def _fetch_with_ytdlp(video_id: str) -> str:
             response = ydl.urlopen(sub_url)
             raw = response.read().decode("utf-8", errors="replace")
 
-            text = _parse_json_subs(raw) if raw.strip().startswith(("{", "[")) else _parse_vtt(raw)
+            text = (
+                _parse_json_subs(raw)
+                if raw.strip().startswith(("{", "["))
+                else _parse_vtt(raw)
+            )
 
             if text:
                 fmt = "json" if raw.strip().startswith(("{", "[")) else "vtt"
@@ -201,7 +210,7 @@ def _attempt_fetch(video_id: str) -> str:
     return _fetch_with_ytdlp(video_id)
 
 
-def fetch_captions(video_id: str) -> str:
+def fetch_captions(video_id: str | None) -> str:
     """
     Fetch English captions for a YouTube video with retry and backoff.
 
@@ -227,7 +236,9 @@ def fetch_captions(video_id: str) -> str:
             return _attempt_fetch(clean_video_id)
         except TranscriptError:
             if attempt < TRANSCRIPT_RETRIES:
-                delay = TRANSCRIPT_INITIAL_DELAY * (2 ** (attempt - 1)) + random.uniform(0, 0.5)
+                delay = TRANSCRIPT_INITIAL_DELAY * (
+                    2 ** (attempt - 1)
+                ) + random.uniform(0, 0.5)
                 logger.info(
                     f"Transcript extraction failed (attempt {attempt}/{TRANSCRIPT_RETRIES}), "
                     f"retrying in {delay:.1f}s..."

@@ -1,7 +1,5 @@
 """Content classification service."""
 
-from typing import cast
-
 from google import genai
 
 from app.core.clients import create_genai_client

@@ -1,7 +1,5 @@
 """Prompt template loading utilities."""
 
-import os
-
 from app.config import PROMPTS_DIR
 from app.utils.logger import logger
 

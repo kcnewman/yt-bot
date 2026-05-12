@@ -7,7 +7,7 @@ from app.utils.logger import logger
 YOUTUBE_REGEX = r"(?:https?:\/\/)?(?:www\.)?(?:youtube\.com\/(?:[^\/\n\s]+\/\S+\/|(?:v|e(?:mbed)?)\/|\S*?[?&]v=)|youtu\.be\/|youtube\.com\/shorts\/)([a-zA-Z0-9_-]{11})"
 
 
-def extract_video_id(url: str) -> str | None:
+def extract_video_id(url: str | None) -> str | None:
     """
     Extract the YouTube video ID from a URL.
 

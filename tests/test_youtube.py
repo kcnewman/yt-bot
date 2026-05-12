@@ -1,7 +1,5 @@
 """Tests for YouTube utilities."""
 
-import pytest
-
 from app.utils.youtube import extract_video_id
 
 

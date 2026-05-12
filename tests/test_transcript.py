@@ -33,7 +33,7 @@ Foo bar"""
 
     def test_parse_vtt_handles_html_entities(self):
         vtt = "It&apos;s a &quot;test&quot; &amp; more"
-        assert _parse_vtt(vtt) == "It's a \"test\" & more"
+        assert _parse_vtt(vtt) == 'It\'s a "test" & more'
 
     def test_parse_json_subs(self):
         data = '{"events": [{"segs": [{"utf8": "Hello "}, {"utf8": "world"}]}]}'
@@ -60,9 +60,7 @@ class TestFetchWithYtdlp:
 
         mock_ydl = Mock()
         mock_ydl.extract_info.return_value = {
-            "subtitles": {
-                "en": [{"ext": "vtt", "url": "http://example.com/sub.vtt"}]
-            }
+            "subtitles": {"en": [{"ext": "vtt", "url": "http://example.com/sub.vtt"}]}
         }
         mock_ydl.urlopen.return_value = mock_response
         mock_ydl_class.return_value.__enter__.return_value = mock_ydl
@@ -83,9 +81,7 @@ class TestFetchWithYtdlp:
 
         mock_ydl = Mock()
         mock_ydl.extract_info.return_value = {
-            "subtitles": {
-                "en": [{"ext": "srv3", "url": "http://example.com/sub.srv3"}]
-            }
+            "subtitles": {"en": [{"ext": "srv3", "url": "http://example.com/sub.srv3"}]}
         }
         mock_ydl.urlopen.return_value = mock_response
         mock_ydl_class.return_value.__enter__.return_value = mock_ydl
@@ -123,9 +119,7 @@ class TestFetchWithYtdlp:
     def test_fallback_raises_error_when_no_captions(self, mock_ydl_class):
         """Should raise TranscriptError when no captions available."""
         mock_ydl = Mock()
-        mock_ydl.extract_info.return_value = {
-            "subtitles": {}, "automatic_captions": {}
-        }
+        mock_ydl.extract_info.return_value = {"subtitles": {}, "automatic_captions": {}}
         mock_ydl_class.return_value.__enter__.return_value = mock_ydl
 
         with pytest.raises(TranscriptError, match="No captions found via yt-dlp"):
@@ -220,7 +214,9 @@ class TestFetchCaptions:
 
     @patch("app.services.transcript._fetch_with_ytdlp")
     @patch("app.services.transcript.YouTubeTranscriptApi")
-    def test_whitespace_still_trimmed_for_both_methods(self, mock_api_class, mock_fallback):
+    def test_whitespace_still_trimmed_for_both_methods(
+        self, mock_api_class, mock_fallback
+    ):
         """Should trim whitespace for both API and fallback."""
         mock_api = Mock()
         mock_api_class.return_value = mock_api

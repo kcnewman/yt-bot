@@ -89,7 +89,10 @@ def _generate_text(prompt: str) -> str:
         response = client.models.generate_content(
             model=SUMMARIZE_MODEL, contents=prompt
         )
-        if hasattr(response, "prompt_feedback") and response.prompt_feedback.block_reason:
+        if (
+            response.prompt_feedback is not None
+            and response.prompt_feedback.block_reason
+        ):
             raise SummarizationError(
                 f"Content blocked: {response.prompt_feedback.block_reason}"
             )
@@ -102,7 +105,7 @@ def _generate_text(prompt: str) -> str:
         raise SummarizationError(f"LLM generation failed: {error}")
 
 
-def summarize_transcript(transcript: str, content_type: str = "general") -> str:
+def summarize_transcript(transcript: str | None, content_type: str = "general") -> str:
     """
     Generate a concise summary from a transcript.
 

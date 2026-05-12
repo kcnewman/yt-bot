@@ -6,7 +6,7 @@ from pathlib import Path
 from dotenv import load_dotenv
 
 # Local development convenience. In production, real environment variables win.
-load_dotenv(override=False)
+_ = load_dotenv(override=False)
 
 
 def _get_env(key: str, default: str | None = None) -> str | None:
@@ -59,24 +59,26 @@ YOUTUBE_COOKIES_FILE = _get_optional_env("YOUTUBE_COOKIES_FILE")
 # TTS Tempo Configuration
 _tts_tempo_str = _get_optional_env("TTS_TEMPO", "1.0")
 try:
-    TTS_TEMPO: float = float(_tts_tempo_str)
+    _tts_tempo_val: float = float(_tts_tempo_str)
 except ValueError:
     from app.utils.logger import logger
 
     logger.warning(f"Invalid TTS_TEMPO value: {_tts_tempo_str}, using default 1.0")
-    TTS_TEMPO = 1.0
+    _tts_tempo_val = 1.0
+TTS_TEMPO: float = _tts_tempo_val
 
 # Pipeline Configuration
 _pipeline_workers_str = _get_optional_env("PIPELINE_WORKERS", "2")
 try:
-    PIPELINE_WORKERS: int = max(1, int(_pipeline_workers_str))
+    _pipeline_workers_val: int = max(1, int(_pipeline_workers_str))
 except ValueError:
     from app.utils.logger import logger
 
     logger.warning(
         f"Invalid PIPELINE_WORKERS value: {_pipeline_workers_str}, using default 2"
     )
-    PIPELINE_WORKERS = 2
+    _pipeline_workers_val = 2
+PIPELINE_WORKERS: int = _pipeline_workers_val
 
 # Paths
 BASE_DIR = Path(__file__).resolve().parents[1]
