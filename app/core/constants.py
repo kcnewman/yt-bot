@@ -57,3 +57,6 @@ MSG_TRANSLATION_FAILED_PREFIX = (
 MSG_AUDIO_FAILED_PREFIX = (
     "I couldn't generate the audio, but here is your Twi summary:\n\n"
 )
+MSG_GENERIC_ERROR = (
+    "Something went wrong while processing your video. Please try again."
+)

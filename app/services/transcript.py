@@ -6,6 +6,7 @@ import os
 import random
 import re
 import time
+from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 from typing import Any
 
@@ -14,6 +15,7 @@ from youtube_transcript_api.formatters import TextFormatter
 
 from app.config import YOUTUBE_COOKIES_FILE, YOUTUBE_PROXY_URL
 from app.core.constants import (
+    TIMEOUT_SECONDS,
     TRANSCRIPT_INITIAL_DELAY,
     TRANSCRIPT_LANGUAGES,
     TRANSCRIPT_RETRIES,
@@ -104,6 +106,7 @@ def _build_ydl_opts() -> Any:
         "no_warnings": True,
         "skip_download": True,
         "http_headers": _build_http_headers(),
+        "socket_timeout": TIMEOUT_SECONDS,
         "extractor_args": {"youtube": {"skip": ["dash", "hls"]}},
     }
 
@@ -122,37 +125,49 @@ def _build_ydl_opts() -> Any:
 
 
 def _call_transcript_api(video_id: str) -> str | None:
-    """Try youtube-transcript-api. Returns text or None on failure."""
-    try:
-        os.environ.pop("HTTP_PROXY", None)
-        os.environ.pop("HTTPS_PROXY", None)
-        if YOUTUBE_PROXY_URL:
-            os.environ["HTTP_PROXY"] = YOUTUBE_PROXY_URL
-            os.environ["HTTPS_PROXY"] = YOUTUBE_PROXY_URL
+    """Try youtube-transcript-api with a socket-level timeout."""
 
-        api = YouTubeTranscriptApi()
-        transcript_data = (
-            api.list(video_id).find_transcript(TRANSCRIPT_LANGUAGES).fetch()
-        )
-        transcript_text = TextFormatter().format_transcript(transcript_data).strip()
-
-        if transcript_text:
-            logger.info(
-                f"youtube-transcript-api: {len(transcript_text)} chars for {video_id}"
-            )
-            return transcript_text
-
-        logger.warning(f"youtube-transcript-api returned empty for {video_id}")
-
-    except Exception as error:
-        logger.warning(f"youtube-transcript-api failed for {video_id}: {error}")
-
-    finally:
-        if YOUTUBE_PROXY_URL:
+    def _run() -> str | None:
+        try:
             os.environ.pop("HTTP_PROXY", None)
             os.environ.pop("HTTPS_PROXY", None)
+            if YOUTUBE_PROXY_URL:
+                os.environ["HTTP_PROXY"] = YOUTUBE_PROXY_URL
+                os.environ["HTTPS_PROXY"] = YOUTUBE_PROXY_URL
 
-    return None
+            api = YouTubeTranscriptApi()
+            transcript_data = (
+                api.list(video_id).find_transcript(TRANSCRIPT_LANGUAGES).fetch()
+            )
+            transcript_text = TextFormatter().format_transcript(transcript_data).strip()
+
+            if transcript_text:
+                logger.info(
+                    f"youtube-transcript-api: {len(transcript_text)} chars for {video_id}"
+                )
+                return transcript_text
+
+            logger.warning(f"youtube-transcript-api returned empty for {video_id}")
+
+        except Exception as error:
+            logger.warning(f"youtube-transcript-api failed for {video_id}: {error}")
+
+        finally:
+            if YOUTUBE_PROXY_URL:
+                os.environ.pop("HTTP_PROXY", None)
+                os.environ.pop("HTTPS_PROXY", None)
+
+        return None
+
+    with ThreadPoolExecutor(max_workers=1) as pool:
+        future = pool.submit(_run)
+        try:
+            return future.result(timeout=TIMEOUT_SECONDS)
+        except TimeoutError:
+            logger.warning(
+                f"youtube-transcript-api timed out ({TIMEOUT_SECONDS}s) for {video_id}"
+            )
+            return None
 
 
 def _fetch_with_ytdlp(video_id: str) -> str:
@@ -161,41 +176,48 @@ def _fetch_with_ytdlp(video_id: str) -> str:
 
     ydl_opts = _build_ydl_opts()
 
-    with yt_dlp.YoutubeDL(ydl_opts) as ydl:
-        info = ydl.extract_info(video_id, download=False)
+    try:
+        with yt_dlp.YoutubeDL(ydl_opts) as ydl:
+            info = ydl.extract_info(video_id, download=False)
 
-        for source_key in ("subtitles", "automatic_captions"):
-            subs = info.get(source_key, {}).get("en", [])
-            if not subs:
-                continue
+            for source_key in ("subtitles", "automatic_captions"):
+                subs = info.get(source_key, {}).get("en", [])
+                if not subs:
+                    continue
 
-            preferred = ("vtt", "srv3", "json3", "ttml", "srv2", "srv1")
-            sub_url = next(
-                (s["url"] for s in subs if s.get("ext") in preferred and s.get("url")),
-                None,
-            )
-            if not sub_url:
-                sub_url = subs[0].get("url")
-
-            if not sub_url:
-                continue
-
-            response = ydl.urlopen(sub_url)
-            raw = response.read().decode("utf-8", errors="replace")
-
-            text = (
-                _parse_json_subs(raw)
-                if raw.strip().startswith(("{", "["))
-                else _parse_vtt(raw)
-            )
-
-            if text:
-                fmt = "json" if raw.strip().startswith(("{", "[")) else "vtt"
-                logger.info(
-                    f"yt-dlp extracted transcript from {source_key} (format={fmt}, "
-                    f"{len(text)} chars)"
+                preferred = ("vtt", "srv3", "json3", "ttml", "srv2", "srv1")
+                sub_url = next(
+                    (
+                        s["url"]
+                        for s in subs
+                        if s.get("ext") in preferred and s.get("url")
+                    ),
+                    None,
                 )
-                return text
+                if not sub_url:
+                    sub_url = subs[0].get("url")
+
+                if not sub_url:
+                    continue
+
+                response = ydl.urlopen(sub_url)
+                raw = response.read().decode("utf-8", errors="replace")
+
+                text = (
+                    _parse_json_subs(raw)
+                    if raw.strip().startswith(("{", "["))
+                    else _parse_vtt(raw)
+                )
+
+                if text:
+                    fmt = "json" if raw.strip().startswith(("{", "[")) else "vtt"
+                    logger.info(
+                        f"yt-dlp extracted transcript from {source_key} "
+                        f"(format={fmt}, {len(text)} chars)"
+                    )
+                    return text
+    except Exception as error:
+        raise TranscriptError(f"yt-dlp fallback failed: {error}") from error
 
     raise TranscriptError("No captions found via yt-dlp fallback.")
 

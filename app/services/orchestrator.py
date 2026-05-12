@@ -6,6 +6,7 @@ from pathlib import Path
 
 from app.core.constants import (
     MSG_AUDIO_FAILED_PREFIX,
+    MSG_GENERIC_ERROR,
     MSG_INVALID_URL,
     MSG_NO_CAPTIONS,
     MSG_SUMMARY_FAILED,
@@ -243,3 +244,4 @@ def process_video(url: str, chat_id: int) -> None:
                 delete_message(chat_id, status_msg)
             except Exception:
                 pass
+        send_text(chat_id, MSG_GENERIC_ERROR)

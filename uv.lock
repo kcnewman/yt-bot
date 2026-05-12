@@ -7,6 +7,9 @@ resolution-markers = [
     "python_full_version < '3.13'",
 ]
 
+[options]
+prerelease-mode = "allow"
+
 [[package]]
 name = "annotated-doc"
 version = "0.0.4"
@@ -902,7 +905,7 @@ requires-dist = [
     { name = "sqlalchemy", specifier = ">=2.0.0" },
     { name = "uvicorn", specifier = ">=0.44.0" },
     { name = "youtube-transcript-api", specifier = ">=1.2.4" },
-    { name = "yt-dlp", specifier = ">=2024.12.0" },
+    { name = "yt-dlp", specifier = ">=2026.4.0" },
 ]
 provides-extras = ["dev"]
 
@@ -914,9 +917,9 @@ dev = [
 
 [[package]]
 name = "yt-dlp"
-version = "2026.3.17"
+version = "2026.5.5.233942.dev0"
 source = { registry = "https://pypi.org/simple" }
-sdist = { url = "https://files.pythonhosted.org/packages/8b/34/7c6b4e3f89cb6416d2cd7ab6dab141a1df97ab0fb22d15816db2c92148c9/yt_dlp-2026.3.17.tar.gz", hash = "sha256:ba7aa31d533f1ffccfe70e421596d7ca8ff0bf1398dc6bb658b7d9dec057d2c9", size = 3119221, upload-time = "2026-03-17T23:43:00.244Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/1b/f9/86bbc35e82d73f38d7a01c0e570f05b7f305f8cdf42c0c76a466541f9d10/yt_dlp-2026.5.5.233942.dev0.tar.gz", hash = "sha256:9a9819d529c37d1e6979c382c8d08ee3b625df0d44e755f51122fef9e6764621", size = 3130387, upload-time = "2026-05-05T23:44:22.838Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/cd/13/5093bcb954878e50f7217fd2ab94282b53934022e4e4a03265582da83bf5/yt_dlp-2026.3.17-py3-none-any.whl", hash = "sha256:32992db94303a8a5d211a183f2174834fe7f8c29d83ed2e7a324eae97a8f26d8", size = 3315134, upload-time = "2026-03-17T23:42:57.863Z" },
+    { url = "https://files.pythonhosted.org/packages/93/06/f7f66fbf2e04589454cbc9f7e0d2c44b2aebed81ef61480ed62905476d60/yt_dlp-2026.5.5.233942.dev0-py3-none-any.whl", hash = "sha256:75b0a2766bb578a6dedb434cb4dc8e47f74a410459eeac4ea9950c448302d868", size = 3317525, upload-time = "2026-05-05T23:44:20.577Z" },
 ]
